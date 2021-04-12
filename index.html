@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+  <style>
+
+  </style>
+</head>
+
+<body>
+  <h1>Asian American Hate Crimes in NYC</h1>
+  <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
+  <svg id="map" width="1000" height="800"></svg>
+
+  <script>
+    let svg = d3.select("svg#map");
+    let width = svg.attr("width");
+    let height = svg.attr("height");
+
+    const requestData = async function () {
+      // a CSV dataset of NYPD hate crimes
+      let hateCrimes = await d3.csv("NYPD_Hate_Crimes.csv", d3.autoType);
+
+      // a GeoJSON dataset of police precincts in NYC
+      let precincts = await d3.json("nyc_police_precincts.json");
+
+      // create d3 time objects
+      let timeParser = d3.timeParse('%m/%d/%Y');
+
+      // clean up hate crime data
+      hateCrimes.forEach(d => {
+        d["Arrest Date"] = timeParser(d["Arrest Date"]);
+        d["Record Create Date"] = timeParser(d["Record Create Date"]);
+      });
+
+      // clean up police precincts data
+      precincts.features.forEach(d => {
+        d.properties.policePrecinct = parseInt(d.properties.policePrecinct);
+      });
+
+      // console.log(hateCrimes);
+      // console.log(precincts);
+
+    };
+
+    requestData();
+  </script>
+</body>
+
+</html>
