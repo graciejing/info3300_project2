@@ -24,6 +24,7 @@
 
       // a GeoJSON dataset of police precincts in NYC
       let precincts = await d3.json("nyc_police_precincts.json");
+      //this is a feature collection
 
       // create d3 time objects
       let timeParser = d3.timeParse('%m/%d/%Y');
@@ -32,6 +33,7 @@
       hateCrimes.forEach(d => {
         d["Arrest Date"] = timeParser(d["Arrest Date"]);
         d["Record Create Date"] = timeParser(d["Record Create Date"]);
+        d["precinct"] = d["Complaint Precinct Code"]
       });
 
       // clean up police precincts data
@@ -39,8 +41,32 @@
         d.properties.policePrecinct = parseInt(d.properties.policePrecinct);
       });
 
-      // console.log(hateCrimes);
-      // console.log(precincts);
+      console.log(hateCrimes);
+      console.log(precincts);
+
+
+      // Organizing data per precinct
+      let precinctCrimeCount = {};
+      let countyCrimeCount = {};
+      hateCrimes.forEach(d => {
+
+        if (!(d.precinct in precinctCrimeCount)) {
+          precinctCrimeCount[d.precinct] = 1
+        }
+        else {
+          precinctCrimeCount[d.precinct] += 1
+        }
+        if (!(d.County in countyCrimeCount)) {
+          countyCrimeCount[d.County] = 1
+        }
+        else {
+          countyCrimeCount[d.County] += 1
+        }
+      });
+      console.log(precinctCrimeCount)
+      console.log(countyCrimeCount)
+      // map.selectAll(".precinct")
+      //    .append("text", d => d.)
 
     };
 
