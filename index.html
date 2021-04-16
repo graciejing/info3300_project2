@@ -30,16 +30,25 @@
         // create d3 time objects
         let timeParser = d3.timeParse("%m/%d/%Y");
 
+        const countyToBorough = {
+          'QUEENS': 'Queens',
+          'BRONX': 'Bronx',
+          'NEW YORK': 'Manhattan',
+          'KINGS': 'Brooklyn',
+          'RICHMOND': 'Staten Island'
+        };
+
         // clean up hate crime data
         hateCrimes.forEach((d) => {
           d["Arrest Date"] = timeParser(d["Arrest Date"]);
           d["Record Create Date"] = timeParser(d["Record Create Date"]);
           d["precinct"] = d["Complaint Precinct Code"]
+          d["borough"] = countyToBorough[d.County]
         });
 
         // clean up police precincts data
         precincts.features.forEach((d) => {
-          d.properties.policePrecinct = parseInt(d.properties.policePrecinct);
+          d.properties.precinct = parseInt(d.properties.policePrecinct);
         });
 
         console.log(hateCrimes);
@@ -51,39 +60,43 @@
            .data(precincts.features)
            .join("path")
            .attr("class", "precinct")
-           .attr("fill", "blue")
+           // .attr("fill", "blue")
            .attr("stroke", "black")
            .attr("stroke-width", 1)
            .attr("d", path);
 
 
         // Organizing data per precinct
-        let precinctCrimeCount = {};
-        let countyCrimeCount = {};
-        hateCrimes.forEach(d => {
 
-          if (!(d.precinct in precinctCrimeCount)) {
-            precinctCrimeCount[d.precinct] = 1
-          }
-          else {
-            precinctCrimeCount[d.precinct] += 1
-          }
-          if (!(d.County in countyCrimeCount)) {
-            countyCrimeCount[d.County] = 1
-          }
-          else {
-            countyCrimeCount[d.County] += 1
-          }
+        let precinctCrimeCount = {};
+        let boroughCrimeCount = {};
+        precincts.features.forEach(d => {
+          console.log(d)
+          precinctCrimeCount[d.properties.precinct] = 0
+          boroughCrimeCount[d.properties.borough] = 0
         });
         console.log(precinctCrimeCount)
-        console.log(countyCrimeCount)
+        hateCrimes.forEach(d => {
+            precinctCrimeCount[d.precinct] += 1
+            boroughCrimeCount[d.borough] += 1
+        });
+        console.log(precinctCrimeCount)
+        console.log(boroughCrimeCount)
 
         let colorScale = d3.scaleQuantile()
                            .domain(Object.values(precinctCrimeCount))
                            .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"])
+
         map.selectAll(".precinct")
-           .attr("fill", colorScale(d => precinctCrimeCount[d.properties.policePrecinct]))
+           .style("fill", d => {
+             // console.log(d.properties.policePrecinct);
+             // console.log(precinctCrimeCount[d.properties.policePrecinct]);
+             return colorScale(precinctCrimeCount[d.properties.precinct]);
+           }
+           );
+
       };
+
 
       requestData();
     </script>
