@@ -1,51 +1,57 @@
 <!DOCTYPE html>
 <html>
+  <head>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style></style>
+  </head>
 
-<head>
-  <script src="https://d3js.org/d3.v6.min.js"></script>
-  <style>
+  <body>
+    <h1>Asian American Hate Crimes in NYC</h1>
+    <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
+    <svg id="map" width="1000" height="800"></svg>
 
-  </style>
-</head>
+    <script>
+      let svg = d3.select("svg#map");
+      let width = svg.attr("width");
+      let height = svg.attr("height");
 
-<body>
-  <h1>Asian American Hate Crimes in NYC</h1>
-  <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-  <svg id="map" width="1000" height="800"></svg>
+      const requestData = async function () {
+        // a CSV dataset of NYPD hate crimes
+        let hateCrimes = await d3.csv("NYPD_Hate_Crimes.csv", d3.autoType);
 
-  <script>
-    let svg = d3.select("svg#map");
-    let width = svg.attr("width");
-    let height = svg.attr("height");
+        // a GeoJSON dataset of police precincts in NYC
+        let precincts = await d3.json("nyc_police_precincts.json");
 
-    const requestData = async function () {
-      // a CSV dataset of NYPD hate crimes
-      let hateCrimes = await d3.csv("NYPD_Hate_Crimes.csv", d3.autoType);
+        // create d3 time objects
+        let timeParser = d3.timeParse("%m/%d/%Y");
 
-      // a GeoJSON dataset of police precincts in NYC
-      let precincts = await d3.json("nyc_police_precincts.json");
+        // clean up hate crime data
+        hateCrimes.forEach((d) => {
+          d["Arrest Date"] = timeParser(d["Arrest Date"]);
+          d["Record Create Date"] = timeParser(d["Record Create Date"]);
+        });
 
-      // create d3 time objects
-      let timeParser = d3.timeParse('%m/%d/%Y');
+        // clean up police precincts data
+        precincts.features.forEach((d) => {
+          d.properties.policePrecinct = parseInt(d.properties.policePrecinct);
+        });
 
-      // clean up hate crime data
-      hateCrimes.forEach(d => {
-        d["Arrest Date"] = timeParser(d["Arrest Date"]);
-        d["Record Create Date"] = timeParser(d["Record Create Date"]);
-      });
+        // console.log(hateCrimes);
+        // console.log(precincts);
+        var projection = d3.geoMercator().fitSize([width, height], precincts);
+        var path = d3.geoPath().projection(projection);
+        svg
+          .selectAll("path")
+          .data(precincts.features)
+          .join("path")
+          .attr("class", "precincts")
+          .attr("fill", "blue")
+          .attr("stroke", "black")
+          .attr("stroke-width", 1)
+          .attr("d", path);
+      };
 
-      // clean up police precincts data
-      precincts.features.forEach(d => {
-        d.properties.policePrecinct = parseInt(d.properties.policePrecinct);
-      });
-
-      // console.log(hateCrimes);
-      // console.log(precincts);
-
-    };
-
-    requestData();
-  </script>
-</body>
-
+      requestData();
+    </script>
+  </body>
 </html>
