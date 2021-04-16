@@ -11,9 +11,14 @@
     <svg id="map" width="1000" height="800"></svg>
 
     <script>
-      let svg = d3.select("svg#map");
-      let width = svg.attr("width");
-      let height = svg.attr("height");
+      const svg = d3.select("svg#map");
+      const width = svg.attr("width");
+      const height = svg.attr("height");
+      const margin = { top: 20, right: 20, bottom: 20, left:20};
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg.append("g")
+                      .attr("transform","translate("+margin.left+","+margin.top+")");
 
       const requestData = async function () {
         // a CSV dataset of NYPD hate crimes
@@ -37,19 +42,19 @@
           d.properties.policePrecinct = parseInt(d.properties.policePrecinct);
         });
 
-        // console.log(hateCrimes);
-        // console.log(precincts);
+        console.log(hateCrimes);
+        console.log(precincts);
+
         var projection = d3.geoMercator().fitSize([width, height], precincts);
         var path = d3.geoPath().projection(projection);
-        svg
-          .selectAll("path")
-          .data(precincts.features)
-          .join("path")
-          .attr("class", "precincts")
-          .attr("fill", "blue")
-          .attr("stroke", "black")
-          .attr("stroke-width", 1)
-          .attr("d", path);
+        map.selectAll("path.precinct")
+           .data(precincts.features)
+           .join("path")
+           .attr("class", "precinct")
+           .attr("fill", "blue")
+           .attr("stroke", "black")
+           .attr("stroke-width", 1)
+           .attr("d", path);
 
 
         // Organizing data per precinct
@@ -72,6 +77,12 @@
         });
         console.log(precinctCrimeCount)
         console.log(countyCrimeCount)
+
+        let colorScale = d3.scaleQuantile()
+                           .domain(Object.values(precinctCrimeCount))
+                           .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"])
+        map.selectAll(".precinct")
+           .attr("fill", colorScale(d => precinctCrimeCount[d.properties.policePrecinct]))
       };
 
       requestData();
