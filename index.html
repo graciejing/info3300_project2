@@ -53,6 +53,7 @@
 
         console.log(hateCrimes);
         console.log(precincts);
+        console.log(hateCrimes.length)
 
         var projection = d3.geoMercator().fitSize([width, height], precincts);
         var path = d3.geoPath().projection(projection);
@@ -75,7 +76,7 @@
           precinctCrimeCount[d.properties.precinct] = 0
           boroughCrimeCount[d.properties.borough] = 0
         });
-        console.log(precinctCrimeCount)
+        // console.log(precinctCrimeCount)
         hateCrimes.forEach(d => {
             precinctCrimeCount[d.precinct] += 1
             boroughCrimeCount[d.borough] += 1
@@ -88,12 +89,7 @@
                            .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"])
 
         map.selectAll(".precinct")
-           .style("fill", d => {
-             // console.log(d.properties.policePrecinct);
-             // console.log(precinctCrimeCount[d.properties.policePrecinct]);
-             return colorScale(precinctCrimeCount[d.properties.precinct]);
-           }
-           );
+           .style("fill", d => colorScale(precinctCrimeCount[d.properties.precinct]));
 
       };
 
