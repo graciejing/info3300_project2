@@ -77,7 +77,9 @@
             hateCrimeTypes.push(type);
           }
         });
-        // hateCrimeTypes.sort();
+        hateCrimeTypes.sort();
+        hateCrimeTypes.pop(null);
+        hateCrimeTypes.unshift(null);
         console.log(hateCrimeTypes);
 
         // create filters
@@ -111,9 +113,16 @@
             let key = d3.select(this).attr("param");
             let val = d3.select(this).property("value");
             console.log(val);
-            if (val.length > 0) {
+            if (val === "") {
               hateCrimes.forEach(d => {
 
+                precinctCrimeCount[d.precinct] += 1
+                // boroughCrimeCount[d.borough] += 1
+
+              });
+            }
+            else {
+              hateCrimes.forEach(d => {
                 if (d[key] === val) {
                   precinctCrimeCount[d.precinct] += 1
                   // boroughCrimeCount[d.borough] += 1
