@@ -8,6 +8,9 @@
   <body>
     <h1>Asian American Hate Crimes in NYC</h1>
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
+    <div id="filters">
+      <!-- <select id="crimetype" class="filter"></select> -->
+    </div>
     <svg id="map" width="1000" height="800"></svg>
 
     <script>
@@ -66,31 +69,73 @@
            .attr("stroke-width", 1)
            .attr("d", path);
 
-
-        // Organizing data per precinct
-
-        let precinctCrimeCount = {};
-        let boroughCrimeCount = {};
-        precincts.features.forEach(d => {
-          console.log(d)
-          precinctCrimeCount[d.properties.precinct] = 0
-          boroughCrimeCount[d.properties.borough] = 0
+        //create filters for hate crime types
+        var hateCrimeTypes = []
+        hateCrimes.forEach((row, i) => {
+          let type = row['Bias Motive Description'];
+          if (!(hateCrimeTypes.includes(type))) {
+            hateCrimeTypes.push(type);
+          }
         });
-        // console.log(precinctCrimeCount)
-        hateCrimes.forEach(d => {
-            precinctCrimeCount[d.precinct] += 1
-            boroughCrimeCount[d.borough] += 1
+        // hateCrimeTypes.sort();
+        console.log(hateCrimeTypes);
+
+        // create filters
+        let filters = d3.select("#filters")
+        let crimeFilter = filters.append("select")
+                                 .attr("id", "type")
+                                 .attr("class", "filter")
+                                 .attr("param", 'Bias Motive Description')
+        let updateButton = filters.append("button")
+                                  .attr("id", "update")
+                                  .text("Update")
+                                  .on("click", updatePrecincts);
+
+        hateCrimeTypes.forEach( (d,i) => {
+          crimeFilter.append("option")
+                     .text(d)
         });
-        console.log(precinctCrimeCount)
-        console.log(boroughCrimeCount)
 
-        let colorScale = d3.scaleQuantile()
-                           .domain(Object.values(precinctCrimeCount))
-                           .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"])
+        //update precincts based on filtered data
+        function updatePrecincts() {
+          let precinctCrimeCount = {};
+          // let boroughCrimeCount = {};
+          precincts.features.forEach(d => {
+            precinctCrimeCount[d.properties.precinct] = 0
+            // boroughCrimeCount[d.properties.borough] = 0
+          });
+          // console.log(precinctCrimeCount)
 
-        map.selectAll(".precinct")
-           .style("fill", d => colorScale(precinctCrimeCount[d.properties.precinct]));
+          //get filtered data
+          filters.selectAll("select").each( function() {
+            let key = d3.select(this).attr("param");
+            let val = d3.select(this).property("value");
+            console.log(val);
+            if (val.length > 0) {
+              hateCrimes.forEach(d => {
 
+                if (d[key] === val) {
+                  precinctCrimeCount[d.precinct] += 1
+                  // boroughCrimeCount[d.borough] += 1
+                }
+              });
+            }
+          });
+
+          console.log(precinctCrimeCount)
+          // console.log(boroughCrimeCount)
+
+          //need to figure out colorScale
+          let colorScale = d3.scaleQuantile()
+                             .domain(Object.values(precinctCrimeCount))
+                             .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"])
+
+          //color precincts
+          map.selectAll(".precinct")
+             .style("fill", d => colorScale(precinctCrimeCount[d.properties.precinct]));
+
+        }
+        updatePrecincts();
       };
 
 
