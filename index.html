@@ -84,17 +84,24 @@
 
         // create filters
         let filters = d3.select("#filters")
-        let crimeFilter = filters.append("select")
+        let crimeFilter = filters.append("div")
                                  .attr("id", "type")
                                  .attr("class", "filter")
-                                 .attr("param", 'Bias Motive Description')
+
         let updateButton = filters.append("button")
                                   .attr("id", "update")
                                   .text("Update")
                                   .on("click", updatePrecincts);
 
         hateCrimeTypes.forEach( (d,i) => {
-          crimeFilter.append("option")
+          crimeFilter.append("input")
+                     .attr("name", d)
+                     .attr("type", "checkbox")
+                     .attr("class", "type")
+                     .attr("param", 'Bias Motive Description')
+
+          crimeFilter.append("label")
+                     .attr("for", d)
                      .text(d)
         });
 
@@ -108,29 +115,37 @@
           });
           // console.log(precinctCrimeCount)
 
+          let checkedFilters = []
           //get filtered data
-          filters.selectAll("select").each( function() {
-            let key = d3.select(this).attr("param");
-            let val = d3.select(this).property("value");
-            console.log(val);
-            if (val === "") {
-              hateCrimes.forEach(d => {
+          filters.selectAll(".type").each( function() {
+            let filter = d3.select(this)
+            let checked = filter.property("checked");
 
+            if (checked) {
+              checkedFilters.push(filter);
+            }
+
+          });
+
+          if (checkedFilters.length === 0) {
+            hateCrimes.forEach(d => {
                 precinctCrimeCount[d.precinct] += 1
                 // boroughCrimeCount[d.borough] += 1
-
-              });
-            }
-            else {
+            });
+          }
+          else {
+            checkedFilters.forEach(fil => {
               hateCrimes.forEach(d => {
+                let key = fil.attr("param");
+                let val = fil.attr("name");
                 if (d[key] === val) {
                   precinctCrimeCount[d.precinct] += 1
                   // boroughCrimeCount[d.borough] += 1
                 }
-              });
-            }
-          });
 
+              });
+            });
+          }
           console.log(precinctCrimeCount)
           // console.log(boroughCrimeCount)
 
