@@ -79,7 +79,6 @@
         });
         hateCrimeTypes.sort();
         hateCrimeTypes.pop(null);
-        hateCrimeTypes.unshift(null);
         console.log(hateCrimeTypes);
 
         // create filters
@@ -93,7 +92,12 @@
                                   .text("Update")
                                   .on("click", updatePrecincts);
 
-        hateCrimeTypes.forEach( (d,i) => {
+        let clearButton = filters.append("button")
+                                 .attr("id", "clear")
+                                 .text("Clear")
+                                 .on("click", clearFilters);
+
+        hateCrimeTypes.forEach( d => {
           crimeFilter.append("input")
                      .attr("name", d)
                      .attr("type", "checkbox")
@@ -104,6 +108,13 @@
                      .attr("for", d)
                      .text(d)
         });
+
+        function clearFilters() {
+          filters.selectAll(".type").each(function() {
+            d3.select(this).property("checked", false);
+          });
+          updatePrecincts();
+        }
 
         //update precincts based on filtered data
         function updatePrecincts() {
@@ -140,6 +151,9 @@
                 let val = fil.attr("name");
                 if (d[key] === val) {
                   precinctCrimeCount[d.precinct] += 1
+                  if (precinctCrimeCount[d.precinct] === NaN) {
+                    console.log(d.precinct);
+                  }
                   // boroughCrimeCount[d.borough] += 1
                 }
 
