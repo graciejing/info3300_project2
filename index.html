@@ -8,9 +8,10 @@
   <body>
     <h1>Asian American Hate Crimes in NYC</h1>
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-    <div id="filters">
-      <!-- <select id="crimetype" class="filter"></select> -->
-    </div>
+
+    <div id="filters"></div>
+    <div id="details"></div>
+
     <svg id="map" width="1000" height="800"></svg>
 
     <script>
@@ -170,8 +171,16 @@
 
           //color precincts
           map.selectAll(".precinct")
-             .style("fill", d => colorScale(precinctCrimeCount[d.properties.precinct]));
+             .style("fill", d => {
+               count = precinctCrimeCount[d.properties.precinct];
+               if (count === 0) {
+                 return "lightgrey"
+               }
+               else {
+                 return colorScale(count);
+               }
 
+             });
         }
         updatePrecincts();
       };
