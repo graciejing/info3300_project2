@@ -10,7 +10,9 @@
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
 
     <div id="filters"></div>
-    <div id="details"></div>
+    <div id="details">
+      <h4>Details:</h4>
+    </div>
 
     <svg id="map" width="1000" height="800"></svg>
 
@@ -50,25 +52,26 @@
           d["borough"] = countyToBorough[d.County]
         });
 
+
         // clean up police precincts data
         precincts.features.forEach((d) => {
-          d.properties.precinct = parseInt(d.properties.policePrecinct);
+          let p = parseInt(d.properties.policePrecinct);
+          d.properties.precinct = p;
         });
 
         console.log(hateCrimes);
         console.log(precincts);
-        console.log(hateCrimes.length)
 
         var projection = d3.geoMercator().fitSize([width, height], precincts);
         var path = d3.geoPath().projection(projection);
         map.selectAll("path.precinct")
            .data(precincts.features)
            .join("path")
-           .attr("class", "precinct")
-           // .attr("fill", "blue")
+           .attr("class", d =>`precinct p${d.properties.precinct}`)
            .attr("stroke", "black")
            .attr("stroke-width", 1)
-           .attr("d", path);
+           .attr("d", path)
+           .on("click", updateDetails);
 
         //create filters for hate crime types
         var hateCrimeTypes = []
@@ -83,10 +86,10 @@
         console.log(hateCrimeTypes);
 
         // create filters
-        let filters = d3.select("#filters")
+        let filters = d3.select("#filters");
         let crimeFilter = filters.append("div")
                                  .attr("id", "type")
-                                 .attr("class", "filter")
+                                 .attr("class", "filter");
 
         let updateButton = filters.append("button")
                                   .attr("id", "update")
@@ -109,6 +112,54 @@
                      .attr("for", d)
                      .text(d)
         });
+
+        //adding details for precinct on click
+        let details = d3.select("#details")
+                        .append("text")
+                        .attr("id", "precinct")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .attr("fill", "black")
+                        .text("Precinct Number: ");
+
+        let selected = null;
+        function updateDetails() {
+          let precinct = d3.select(this);
+          let precinctNumber = precinct.datum().properties["precinct"];
+          console.log(precinctNumber)
+
+          let txt = d3.select("text#precinct");
+          console.log(selected);
+          if (selected === precinctNumber) {
+
+            d3.selectAll(`path.p${precinctNumber}`).each(function() {
+              d3.select(this).attr("stroke-width", "1");
+            });
+            txt.text("Precinct Number: ");
+            selected = null;
+          }
+          else if (selected === null) {
+            d3.selectAll(`path.p${precinctNumber}`).each(function() {
+              d3.select(this).attr("stroke-width", "3");
+            });
+
+            txt.text(`Precinct Number: ${precinctNumber}`);
+            selected = precinctNumber;
+          }
+          else {
+            d3.selectAll(`path.p${selected}`).each(function() {
+              d3.select(this).attr("stroke-width", "1");
+            });
+            d3.selectAll(`path.p${precinctNumber}`).each(function() {
+              d3.select(this).attr("stroke-width", "3");
+            });
+            txt.text(`Precinct Number: ${precinctNumber}`);
+
+            selected = precinctNumber;
+          }
+
+        }
+
 
         function clearFilters() {
           filters.selectAll(".type").each(function() {
