@@ -43,6 +43,9 @@
         // a GeoJSON dataset of police precincts in NYC
         let precincts = await d3.json("nyc_police_precincts.json");
 
+        // a CSV dataset of demographics of NYC
+        let demographics = await d3.csv("Demographics_by_Zip_Code.csv");
+
         // create d3 time objects
         let timeParser = d3.timeParse("%m/%d/%Y");
 
@@ -70,6 +73,15 @@
 
         console.log(hateCrimes);
         console.log(precincts);
+
+        //initialize hate crime frequency dictionary
+        let precinctCrimeCount = {};
+        precincts.features.forEach((d) => {
+          precinctCrimeCount[d.properties.precinct] = 0;
+        });
+        // console.log(precinctCrimeCount)
+
+        let filteredHateCrimes = hateCrimes;
 
         var projection = d3.geoMercator().fitSize([width, height], precincts);
         var path = d3.geoPath().projection(projection);
@@ -270,26 +282,64 @@
             }
           });
 
-          if (checkedFilters.length === 0) {
-            hateCrimes.forEach((d) => {
-              precinctCrimeCount[d.precinct] += 1;
-              // boroughCrimeCount[d.borough] += 1
-            });
-          } else {
+          filteredHateCrimes = hateCrimes.filter((d) => {
+            // console.log(1)
+            let include = true;
             checkedFilters.forEach((fil) => {
-              hateCrimes.forEach((d) => {
-                let key = fil.attr("param");
-                let val = fil.attr("name");
-                if (d[key] === val) {
-                  precinctCrimeCount[d.precinct] += 1;
-                  if (precinctCrimeCount[d.precinct] === NaN) {
-                    console.log(d.precinct);
-                  }
-                  // boroughCrimeCount[d.borough] += 1
-                }
-              });
+              // console.log(fil);
+              let key = fil.attr("param");
+              let val = fil.attr("name");
+              if (d[key] !== val) {
+                include = false;
+              }
             });
-          }
+            return include;
+          });
+        }
+
+        //update precincts based on filtered data
+        function updatePrecincts() {
+          updateFiltered();
+          console.log(filteredHateCrimes);
+          // let checkedFilters = []
+          // //get filtered data
+          // filters.selectAll(".type").each( function() {
+          //   let filter = d3.select(this)
+          //   let checked = filter.property("checked");
+          //
+          //   if (checked) {
+          //     checkedFilters.push(filter);
+          //   }
+          //
+          // });
+
+          // if (checkedFilters.length === 0) {
+          //   hateCrimes.forEach(d => {
+          //       precinctCrimeCount[d.precinct] += 1
+          //       // boroughCrimeCount[d.borough] += 1
+          //   });
+          // }
+          // else {
+          //   checkedFilters.forEach(fil => {
+          //     hateCrimes.forEach(d => {
+          //       let key = fil.attr("param");
+          //       let val = fil.attr("name");
+          //       if (d[key] === val) {
+          //         precinctCrimeCount[d.precinct] += 1
+          //         if (precinctCrimeCount[d.precinct] === NaN) {
+          //         }
+          //         // boroughCrimeCount[d.borough] += 1
+          //       }
+          //     });
+          //   });
+          // }
+          precincts.features.forEach((d) => {
+            precinctCrimeCount[d.properties.precinct] = 0;
+            // boroughCrimeCount[d.properties.borough] = 0
+          });
+          filteredHateCrimes.forEach((d) => {
+            precinctCrimeCount[d.precinct] += 1;
+          });
           console.log(precinctCrimeCount);
           // console.log(boroughCrimeCount)
 
