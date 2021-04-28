@@ -13,83 +13,181 @@
     <div id="details">
       <h4>Details:</h4>
     </div>
-
+    <button id="demographic">Show Demoographic Overlay</button>
     <svg id="map" width="1000" height="800"></svg>
+    <svg id="linegraph" width="1000" height="800"></svg>
 
     <script>
       const svg = d3.select("svg#map");
+      const linegraph = d3.select("svg#linegraph");
       const width = svg.attr("width");
       const height = svg.attr("height");
-      const margin = { top: 20, right: 20, bottom: 20, left:20};
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 };
+      //precinct map
       const mapWidth = width - margin.left - margin.right;
       const mapHeight = height - margin.top - margin.bottom;
-      const map = svg.append("g")
-                      .attr("transform","translate("+margin.left+","+margin.top+")");
+      const map = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      //demographic map
+      const demoMap = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      //linegraph stuff
+      const linewidth = linegraph.attr("width");
+      const lineheight = linegraph.attr("height");
+      const linemargin = { top: 10, right: 10, bottom: 50, left: 50 };
+      const line_chartWidth = linewidth - linemargin.left - linemargin.right;
+      const line_chartHeight = lineheight - linemargin.top - linemargin.bottom;
 
       const requestData = async function () {
         // a CSV dataset of NYPD hate crimes
-        let hateCrimes = await d3.csv("NYPD_Hate_Crimes.csv", d3.autoType);
+        let hateCrimes = await d3.csv("NYPD_Hate_Crimes2.csv", d3.autoType);
 
         // a GeoJSON dataset of police precincts in NYC
-        let precincts = await d3.json("nyc_police_precincts.json");
+        let precincts = await d3.json("Police_Precincts.geojson");
+        // console.log(precincts)
+
+        // let zipcodes = await d3.json("zip_code_040114.geojson");
+        // console.log(zipcodes);
+
+        let neighborhoods = await d3.json("Neighborhood Tabulation Areas (NTA).geojson");
+        // console.log(neighborhoods);
+
+        // let communities = await d3.json("Community Districts.geojson");
+        // console.log(communities);
 
         // a CSV dataset of demographics of NYC
-        let demographics = await d3.csv("Demographics_by_Zip_Code.csv");
+        let demographics = await d3.csv("demo_2018_acs5yr_nta.csv");
+        // console.log(demographics);
+
 
         // create d3 time objects
         let timeParser = d3.timeParse("%m/%d/%Y");
 
         const countyToBorough = {
-          'QUEENS': 'Queens',
-          'BRONX': 'Bronx',
-          'NEW YORK': 'Manhattan',
-          'KINGS': 'Brooklyn',
-          'RICHMOND': 'Staten Island'
+          QUEENS: "Queens",
+          BRONX: "Bronx",
+          "NEW YORK": "Manhattan",
+          KINGS: "Brooklyn",
+          RICHMOND: "Staten Island",
         };
 
         // clean up hate crime data
         hateCrimes.forEach((d) => {
           d["Arrest Date"] = timeParser(d["Arrest Date"]);
           d["Record Create Date"] = timeParser(d["Record Create Date"]);
-          d["precinct"] = d["Complaint Precinct Code"]
-          d["borough"] = countyToBorough[d.County]
+          d["precinct"] = d["Complaint Precinct Code"];
+          d["borough"] = countyToBorough[d.County];
         });
+        // console.log(hateCrimes);
+
+        // clean up demographic data
+        demographics.forEach(d => {
+          d.asian = Number(d['AsnNHE'].replace(/,/g, ""))
+          d.hispanic = Number(d['Hsp1E'].replace(/,/g, ""))
+          d.white = Number(d['WtNHE'].replace(/,/g, ""))
+          d.native = Number(d['AIANNHE'].replace(/,/g, ""))
+          d.black = Number(d['BlNHE'].replace(/,/g, ""))
+          d.hawaiianpi = Number(d['NHPINHE'].replace(/,/g, ""))
+          d.other = Number(d['OthNHE'].replace(/,/g, ""))
+          d.twoplus = Number(d['Rc2plNHE'].replace(/,/g, ""))
+        })
 
 
         // clean up police precincts data
-        precincts.features.forEach((d) => {
-          let p = parseInt(d.properties.policePrecinct);
-          d.properties.precinct = p;
-        });
+        // precincts.features.forEach((d) => {
+        //   let p = parseInt(d.properties.precinct);
+        //   d.properties.precinct = p;
+        // });
 
         console.log(hateCrimes);
         console.log(precincts);
+        console.log(neighborhoods);
+        console.log(demographics);
 
         //initialize hate crime frequency dictionary
         let precinctCrimeCount = {};
-        precincts.features.forEach(d => {
-          precinctCrimeCount[d.properties.precinct] = 0
+        precincts.features.forEach((d) => {
+          precinctCrimeCount[d.properties.precinct] = 0;
         });
         // console.log(precinctCrimeCount)
 
         let filteredHateCrimes = hateCrimes;
 
-        var projection = d3.geoMercator().fitSize([width, height], precincts);
-        var path = d3.geoPath().projection(projection);
+        //create map for precincts
+        var precinctProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], precincts);
+        var precinctPath = d3.geoPath().projection(precinctProjection);
         map.selectAll("path.precinct")
            .data(precincts.features)
            .join("path")
            .attr("class", d =>`precinct p${d.properties.precinct}`)
            .attr("stroke", "black")
            .attr("stroke-width", 1)
-           .attr("d", path)
+           .attr("d", precinctPath)
            .on("click", updateSelected);
 
+        let races = ['asian','black','hispanic','white','native','hawaiianpi', 'other', 'twoplus'];
+        let demoScale = d3.scaleOrdinal()
+                          .domain(races)
+                          .range(d3.schemeCategory10);
+
+        var demoProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], neighborhoods);
+        var demoPath = d3.geoPath().projection(demoProjection);
+        demoMap.selectAll("path.neighborhood")
+              .data(neighborhoods.features)
+              .join("path")
+              .attr("class", "neighborhood")//d =>`zipcode z${d.properties.precinct}`)
+              .attr("stroke", "black")
+              .attr("stroke-width", 1)
+              .attr("d", demoPath)
+              .attr("opacity", 0.5)
+              .attr("fill", d => demoScale(getDomDemo(d)))
+              .attr("visibility", "hidden")
+
+        console.log(demoScale('white'))
+
+
+        function getDomDemo(d) {
+          // console.log(d)
+          // console.log(d.properties['ntacode'])
+          n = demographics.filter(demo => {
+            // console.log(demo['GeoID']);
+            return demo['GeoID'] === d.properties['ntacode']
+          })
+          maxPop = 0
+          domPop = null
+          races.forEach(r => {
+            // console.log(r)
+            if (n[0][r] > maxPop) {
+              maxPop = n[0][r];
+              domPop = r;
+            }
+          });
+          // console.log(domPop)
+          return domPop;
+        }
+
+        //create button to show demographic overlay
+        let showDemoButton = d3.select("button#demographic")
+                                .on("click", showDemographics)
+
+        function showDemographics() {
+          // if
+          console.log('button')
+          demoMap.selectAll("path.neighborhood")
+                .attr("visibility", "")
+                .attr("stroke-width", 0)
+
+          // map.selectAll("path.precinct")
+          //    .attr("stroke-width", 0)
+        }
+
+
         //create filters for hate crime types
-        var hateCrimeTypes = []
+        var hateCrimeTypes = [];
         hateCrimes.forEach((row, i) => {
-          let type = row['Bias Motive Description'];
-          if (!(hateCrimeTypes.includes(type))) {
+          let type = row["Bias Motive Description"];
+          if (!hateCrimeTypes.includes(type)) {
             hateCrimeTypes.push(type);
           }
         });
@@ -99,30 +197,32 @@
 
         // create filters
         let filters = d3.select("#filters");
-        let crimeFilter = filters.append("div")
-                                 .attr("id", "type")
-                                 .attr("class", "filter");
+        let crimeFilter = filters
+          .append("div")
+          .attr("id", "type")
+          .attr("class", "filter");
 
-        let updateButton = filters.append("button")
-                                  .attr("id", "update")
-                                  .text("Update")
-                                  .on("click", updatePrecincts);
+        let updateButton = filters
+          .append("button")
+          .attr("id", "update")
+          .text("Update")
+          .on("click", updatePrecincts);
 
-        let clearButton = filters.append("button")
-                                 .attr("id", "clear")
-                                 .text("Clear")
-                                 .on("click", clearFilters);
+        let clearButton = filters
+          .append("button")
+          .attr("id", "clear")
+          .text("Clear")
+          .on("click", clearFilters);
 
-        hateCrimeTypes.forEach( d => {
-          crimeFilter.append("input")
-                     .attr("name", d)
-                     .attr("type", "checkbox")
-                     .attr("class", "type")
-                     .attr("param", 'Bias Motive Description')
+        hateCrimeTypes.forEach((d) => {
+          crimeFilter
+            .append("input")
+            .attr("name", d)
+            .attr("type", "checkbox")
+            .attr("class", "type")
+            .attr("param", "Bias Motive Description");
 
-          crimeFilter.append("label")
-                     .attr("for", d)
-                     .text(d)
+          crimeFilter.append("label").attr("for", d).text(d);
         });
 
         //adding details for precinct on click
@@ -139,7 +239,7 @@
         function updateSelected() {
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
-          console.log(precinctNumber)
+          console.log(precinctNumber);
 
           let txt = d3.select("text#precinct");
           console.log(selectedPrecincts);
@@ -172,9 +272,8 @@
 
         }
 
-
         function clearFilters() {
-          filters.selectAll(".type").each(function() {
+          filters.selectAll(".type").each(function () {
             d3.select(this).property("checked", false);
           });
 
@@ -186,19 +285,93 @@
           selectedPrecincts = [];
           updatePrecincts();
         }
+        //line graph scales
+        // const crimeExtent = d3.extent(data, (d) => d["precinctstuff"]);
+        // const crimeScale = d3
+        //   .scaleLinear()
+        //   .domain(crimeExtent)
+        //   .range([line_chartHeight, 0]);
+        //
+        // const dateExtent = d3.extent(data, (d) => d["date"]);
+        // const dateScale = d3
+        //   .scaleTime()
+        //   .domain(dateExtent)
+        //   .range([0, chartWidth]);
+        // // Y axis
+        // let leftAxis = d3.axisLeft(crimeScale);
+        // let leftGridlines = d3
+        //   .axisLeft(crimeScale)
+        //   .tickSize(-chartWidth - 10)
+        //   .tickFormat("");
+        // annotations
+        //   .append("g")
+        //   .attr("class", "y axis")
+        //   .attr(
+        //     "transform",
+        //     `translate(${linemargin.left - 10},${linemargin.top})`
+        //   )
+        //   .call(leftAxis);
+        // annotations
+        //   .append("g")
+        //   .attr("class", "y gridlines")
+        //   .attr(
+        //     "transform",
+        //     `translate(${linemargin.left - 10},${linemargin.top})`
+        //   )
+        //   .call(leftGridlines);
+        // // X axis
+        // let bottomAxis = d3.axisBottom(dateScale);
+        // let bottomGridlines = d3
+        //   .axisBottom(dateScale)
+        //   .tickSize(-line_chartHeight - 10)
+        //   .tickFormat("");
+        // annotations
+        //   .append("g")
+        //   .attr("class", "x axis")
+        //   .attr(
+        //     "transform",
+        //     `translate(${linemargin.left},${
+        //       line_chartHeight + linemargin.top + 10
+        //     })`
+        //   )
+        //   .call(bottomAxis);
+        // annotations
+        //   .append("g")
+        //   .attr("class", "x gridlines")
+        //   .attr(
+        //     "transform",
+        //     `translate(${linemargin.left},${
+        //       line_chartHeight + linemargin.top + 10
+        //     })`
+        //   )
+        //   .call(bottomGridlines);
+        // var lineGen = d3
+        //   .line()
+        //   .x((d) => dateScale(d["date"]))
+        //   .y((d) => crimeScale(d["frequncy of crimes"]))
+        //   .curve(d3.curveMonotoneX); // this configures whether straight lines connect your data points
+        // //  or if it blends between points using a curve; see d3.line docs
+        // //final graph
+        // chartArea
+        //   .append("path")
+        //   .datum(data)
+        //   .attr("class", "line")
+        //   .attr("fill", "none")
+        //   .attr("stroke", "steelblue")
+        //   .attr("stroke-width", 3)
+        //   .attr("d", lineGen);
 
-        //updates filteredHateCrimes based on selected filters
+        //update precincts based on filtered data
         function updateFiltered() {
-          let checkedFilters = []
-          //get filtered data
-          filters.selectAll(".type").each( function() {
-            let filter = d3.select(this)
-            let checked = filter.property("checked");
 
+          let checkedFilters = [];
+          //get filtered data
+          filters.selectAll(".type").each(function () {
+            let filter = d3.select(this);
+            let checked = filter.property("checked");
             if (checked) {
               checkedFilters.push(filter);
             }
-
           });
 
           filteredHateCrimes = hateCrimes.filter(d => {
@@ -210,7 +383,7 @@
               let key = fil.attr("param");
               let val = fil.attr("name");
               if (d[key] !== val) {
-                include = false
+                include = false;
               }
             });
 
@@ -218,25 +391,24 @@
           });
           console.log(filteredHateCrimes);
 
-          //update precinct crime frequencies
-          precincts.features.forEach(d => {
-            precinctCrimeCount[d.properties.precinct] = 0
-          });
-          filteredHateCrimes.forEach(d => {
-              precinctCrimeCount[d.precinct] += 1
-          });
-          console.log(precinctCrimeCount);
+          precincts.features.forEach((d) => {
+            precinctCrimeCount[d.properties.precinct] = 0;
 
-        };
+          });
+          filteredHateCrimes.forEach((d) => {
+            precinctCrimeCount[d.precinct] += 1;
+          });
 
-        //Main update function to update map
+        }
+
         function updatePrecincts() {
           updateFiltered();
 
           //need to figure out colorScale
-          let colorScale = d3.scaleQuantile()
-                             .domain(Object.values(precinctCrimeCount))
-                             .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"])
+          let colorScale = d3
+            .scaleQuantile()
+            .domain(Object.values(precinctCrimeCount))
+            .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"]);
 
           //color precincts
           map.selectAll(".precinct")
@@ -255,9 +427,7 @@
         updatePrecincts();
       };
 
-
       requestData();
     </script>
   </body>
-
 </html>
