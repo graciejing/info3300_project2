@@ -6,7 +6,7 @@
   </head>
 
   <body>
-    <h1>Asian American Hate Crimes in NYC</h1>
+    <h1>Hate Crimes in NYC</h1>
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
 
     <div id="filters"></div>
@@ -83,7 +83,7 @@
            .attr("stroke", "black")
            .attr("stroke-width", 1)
            .attr("d", path)
-           .on("click", updateDetails);
+           .on("click", updateSelected);
 
         //create filters for hate crime types
         var hateCrimeTypes = []
@@ -132,43 +132,43 @@
                         .attr("x", 0)
                         .attr("y", 0)
                         .attr("fill", "black")
-                        .text("Precinct Number: ");
+                        .text("No selected precincts");
 
-        let selected = null;
-        function updateDetails() {
+        let selectedPrecincts = [];
+
+        function updateSelected() {
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
           console.log(precinctNumber)
 
           let txt = d3.select("text#precinct");
-          console.log(selected);
-          if (selected === precinctNumber) {
-
+          console.log(selectedPrecincts);
+          // if (selected === precinctNumber) {
+          if (selectedPrecincts.includes(precinctNumber)) {
+            console.log('here')
             d3.selectAll(`path.p${precinctNumber}`).each(function() {
               d3.select(this).attr("stroke-width", "1");
             });
-            txt.text("Precinct Number: ");
-            selected = null;
-          }
-          else if (selected === null) {
-            d3.selectAll(`path.p${precinctNumber}`).each(function() {
-              d3.select(this).attr("stroke-width", "3");
-            });
+            selectedPrecincts = selectedPrecincts.filter(d => d !== precinctNumber);
+            if (selectedPrecincts === []) {
+              txt.text("No selected precincts");
+            }
+            else {
+              txt.text(`Selected Precincts: ${selectedPrecincts}`);
+            }
 
-            txt.text(`Precinct Number: ${precinctNumber}`);
-            selected = precinctNumber;
           }
           else {
-            d3.selectAll(`path.p${selected}`).each(function() {
-              d3.select(this).attr("stroke-width", "1");
-            });
             d3.selectAll(`path.p${precinctNumber}`).each(function() {
               d3.select(this).attr("stroke-width", "3");
             });
-            txt.text(`Precinct Number: ${precinctNumber}`);
 
-            selected = precinctNumber;
+            selectedPrecincts.push(precinctNumber);
+            txt.text(`Selected Precincts: ${selectedPrecincts}`);
           }
+
+          updateFiltered();
+          // updatePrecincts();
 
         }
 
@@ -177,6 +177,13 @@
           filters.selectAll(".type").each(function() {
             d3.select(this).property("checked", false);
           });
+
+          selectedPrecincts.forEach(precinctNumber => {
+            d3.selectAll(`path.p${precinctNumber}`).each(function() {
+              d3.select(this).attr("stroke-width", "1");
+            });
+          })
+          selectedPrecincts = [];
           updatePrecincts();
         }
 
@@ -195,8 +202,9 @@
           });
 
           filteredHateCrimes = hateCrimes.filter(d => {
-            // console.log(1)
             let include = true;
+
+            //check satisfies hate crime type filters
             checkedFilters.forEach(fil => {
               // console.log(fil);
               let key = fil.attr("param");
@@ -205,56 +213,25 @@
                 include = false
               }
             });
+
             return include;
           });
-
-        };
-
-        //update precincts based on filtered data
-        function updatePrecincts() {
-          updateFiltered();
           console.log(filteredHateCrimes);
-          // let checkedFilters = []
-          // //get filtered data
-          // filters.selectAll(".type").each( function() {
-          //   let filter = d3.select(this)
-          //   let checked = filter.property("checked");
-          //
-          //   if (checked) {
-          //     checkedFilters.push(filter);
-          //   }
-          //
-          // });
 
-          // if (checkedFilters.length === 0) {
-          //   hateCrimes.forEach(d => {
-          //       precinctCrimeCount[d.precinct] += 1
-          //       // boroughCrimeCount[d.borough] += 1
-          //   });
-          // }
-          // else {
-          //   checkedFilters.forEach(fil => {
-          //     hateCrimes.forEach(d => {
-          //       let key = fil.attr("param");
-          //       let val = fil.attr("name");
-          //       if (d[key] === val) {
-          //         precinctCrimeCount[d.precinct] += 1
-          //         if (precinctCrimeCount[d.precinct] === NaN) {
-          //         }
-          //         // boroughCrimeCount[d.borough] += 1
-          //       }
-          //     });
-          //   });
-          // }
+          //update precinct crime frequencies
           precincts.features.forEach(d => {
             precinctCrimeCount[d.properties.precinct] = 0
-            // boroughCrimeCount[d.properties.borough] = 0
           });
           filteredHateCrimes.forEach(d => {
               precinctCrimeCount[d.precinct] += 1
           });
-          console.log(precinctCrimeCount)
-          // console.log(boroughCrimeCount)
+          console.log(precinctCrimeCount);
+
+        };
+
+        //Main update function to update map
+        function updatePrecincts() {
+          updateFiltered();
 
           //need to figure out colorScale
           let colorScale = d3.scaleQuantile()
@@ -271,9 +248,10 @@
                else {
                  return colorScale(count);
                }
-
              });
+
         }
+
         updatePrecincts();
       };
 
