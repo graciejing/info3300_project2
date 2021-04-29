@@ -13,7 +13,7 @@
     <div id="details">
       <h4>Details:</h4>
     </div>
-    <button id="demographic">Show Demoographic Overlay</button>
+    <button id="demographic">Show Demographic Overlay</button>
     <svg id="map" width="1000" height="800"></svg>
     <svg id="linegraph" width="1000" height="800"></svg>
 
@@ -49,52 +49,69 @@
         let precincts = await d3.json("Police_Precincts.geojson");
         // console.log(precincts)
 
-        // let zipcodes = await d3.json("zip_code_040114.geojson");
-        // console.log(zipcodes);
-
-        let neighborhoods = await d3.json(
-          "Neighborhood Tabulation Areas (NTA).geojson"
-        );
-        // console.log(neighborhoods);
-
-        // let communities = await d3.json("Community Districts.geojson");
-        // console.log(communities);
+        let communities = await d3.json("Community Districts.geojson");
 
         // a CSV dataset of demographics of NYC
-        let demographics = await d3.csv("demo_2018_acs5yr_nta.csv");
-        // console.log(demographics);
+        let demographics = await d3.csv("demo_2018_acs5yr_puma.csv");
 
+        // let PUMAtoCDmapping = await d3.csv("nyc_puma_neighborhood.csv");
+        // console.log(PUMAtoCDmapping);
+
+        const boroughToNum = {
+          "Queens": "4",
+          "Bronx": "2",
+          "Manhattan": "1",
+          "Brooklyn": "3",
+          "Staten Island": "5",
+        };
+
+
+        function getCDNum(s, boro) {
+          i1 = s.indexOf("District") + 9
+          i2 = s.indexOf("--")
+          cds = s.slice(i1,i2).split(" & ")
+          cds.forEach((item, i) => {
+            if (item.length < 2) {
+              item = "0"+item;
+            }
+            cds[i] = boroughToNum[boro]+item
+          });
+
+          return cds;
+        };
+
+        // const PUMAtoBoroCD = {};
+        // PUMAtoCDmapping.forEach((row, i) => {
+        //   PUMAtoBoroCD[row['PUMA_2010']] = boroughToNum[row['Borough']]+row['SubBoroNum']
+        // });
+        // console.log(PUMAtoBoroCD);
+
+        // clean up hate crime data
         // create d3 time objects
         let timeParser = d3.timeParse("%m/%d/%Y");
 
-        const countyToBorough = {
-          QUEENS: "Queens",
-          BRONX: "Bronx",
-          "NEW YORK": "Manhattan",
-          KINGS: "Brooklyn",
-          RICHMOND: "Staten Island",
-        };
-
-        // clean up hate crime data
         hateCrimes.forEach((d) => {
           d["Arrest Date"] = timeParser(d["Arrest Date"]);
           d["Record Create Date"] = timeParser(d["Record Create Date"]);
           d["precinct"] = d["Complaint Precinct Code"];
-          d["borough"] = countyToBorough[d.County];
+          // d["borough"] = countyToBorough[d.County];
         });
         // console.log(hateCrimes);
 
         // clean up demographic data
-        demographics.forEach((d) => {
-          d.asian = Number(d["AsnNHE"].replace(/,/g, ""));
-          d.hispanic = Number(d["Hsp1E"].replace(/,/g, ""));
-          d.white = Number(d["WtNHE"].replace(/,/g, ""));
-          d.native = Number(d["AIANNHE"].replace(/,/g, ""));
-          d.black = Number(d["BlNHE"].replace(/,/g, ""));
-          d.hawaiianpi = Number(d["NHPINHE"].replace(/,/g, ""));
-          d.other = Number(d["OthNHE"].replace(/,/g, ""));
-          d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
-        });
+        demographics.pop();
+        demographics.forEach(d => {
+          d.asian = Number(d['AsnNHE'].replace(/,/g, ""))
+          d.hispanic = Number(d['Hsp1E'].replace(/,/g, ""))
+          d.white = Number(d['WtNHE'].replace(/,/g, ""))
+          d.native = Number(d['AIANNHE'].replace(/,/g, ""))
+          d.black = Number(d['BlNHE'].replace(/,/g, ""))
+          d.hawaiianpi = Number(d['NHPINHE'].replace(/,/g, ""))
+          d.other = Number(d['OthNHE'].replace(/,/g, ""))
+          d.twoplus = Number(d['Rc2plNHE'].replace(/,/g, ""))
+          d.boro_cd = getCDNum(d['GeogName'], d['Borough'])//PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
+        })
+
 
         // clean up police precincts data
         // precincts.features.forEach((d) => {
@@ -104,15 +121,14 @@
 
         console.log(hateCrimes);
         console.log(precincts);
-        console.log(neighborhoods);
         console.log(demographics);
+        console.log(communities);
 
         //initialize hate crime frequency dictionary
         let precinctCrimeCount = {};
         precincts.features.forEach((d) => {
           precinctCrimeCount[d.properties.precinct] = 0;
         });
-        // console.log(precinctCrimeCount)
 
         let filteredHateCrimes = hateCrimes;
 
@@ -121,81 +137,73 @@
           .geoMercator()
           .fitSize([mapWidth, mapHeight], precincts);
         var precinctPath = d3.geoPath().projection(precinctProjection);
-        map
-          .selectAll("path.precinct")
-          .data(precincts.features)
-          .join("path")
-          .attr("class", (d) => `precinct p${d.properties.precinct}`)
-          .attr("stroke", "black")
-          .attr("stroke-width", 1)
-          .attr("d", precinctPath)
-          .on("click", updateSelected);
+        map.selectAll("path.precinct")
+           .data(precincts.features)
+           .join("path")
+           .attr("class", d =>`precinct p${d.properties.precinct}`)
+           .attr("stroke", "black")
+           .attr("stroke-width", 1)
+           .attr("d", precinctPath)
+           .on("click", updateSelected);
 
-        let races = [
-          "asian",
-          "black",
-          "hispanic",
-          "white",
-          "native",
-          "hawaiianpi",
-          "other",
-          "twoplus",
-        ];
-        let demoScale = d3
-          .scaleOrdinal()
-          .domain(races)
-          .range(d3.schemeCategory10);
+        let races = ['asian','black','hispanic','white','native','hawaiianpi', 'other', 'twoplus', null];
+        let demoScale = d3.scaleOrdinal()
+                          .domain(races)
+                          .range(d3.schemeCategory10);
 
-        var demoProjection = d3
-          .geoMercator()
-          .fitSize([mapWidth, mapHeight], neighborhoods);
+        var demoProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], communities);
         var demoPath = d3.geoPath().projection(demoProjection);
-        demoMap
-          .selectAll("path.neighborhood")
-          .data(neighborhoods.features)
-          .join("path")
-          .attr("class", "neighborhood") //d =>`zipcode z${d.properties.precinct}`)
-          .attr("stroke", "black")
-          .attr("stroke-width", 1)
-          .attr("d", demoPath)
-          .attr("opacity", 0.5)
-          .attr("fill", (d) => demoScale(getDomDemo(d)))
-          .attr("visibility", "hidden");
-
-        console.log(demoScale("white"));
+        demoMap.selectAll("path.community")
+              .data(communities.features)
+              .join("path")
+              .attr("class", "community")//d =>`zipcode z${d.properties.precinct}`)
+              .attr("stroke", "black")
+              .attr("stroke-width", 1)
+              .attr("d", demoPath)
+              .attr("opacity", 0.5)
+              .attr("fill", d => demoScale(getDomDemo(d)))
+              .attr("visibility", "hidden")
 
         function getDomDemo(d) {
-          // console.log(d)
-          // console.log(d.properties['ntacode'])
-          n = demographics.filter((demo) => {
-            // console.log(demo['GeoID']);
-            return demo["GeoID"] === d.properties["ntacode"];
+
+          n = demographics.filter(demo => {
+            return demo.boro_cd.includes(d.properties['boro_cd'])
           });
-          maxPop = 0;
-          domPop = null;
-          races.forEach((r) => {
-            // console.log(r)
+          if (n.length === 0) {
+            return null;
+          }
+          // console.log(d);
+          // console.log(n);
+          maxPop = 0
+          domPop = null
+          races.forEach(r => {
             if (n[0][r] > maxPop) {
               maxPop = n[0][r];
               domPop = r;
             }
           });
-          // console.log(domPop)
           return domPop;
         }
 
         //create button to show demographic overlay
-        let showDemoButton = d3
-          .select("button#demographic")
-          .on("click", showDemographics);
+        let showDemoButton = d3.select("button#demographic")
+        showDemoButton.attr("clicked", false)
+                      .on("click", showDemographics);
 
         function showDemographics() {
-          // if
-          console.log("button");
-          demoMap
-            .selectAll("path.neighborhood")
-            .attr("visibility", "")
-            .attr("stroke-width", 0);
+          if (showDemoButton.attr('clicked') === 'true') {
+            showDemoButton.text("Show Demographic Overlay");
+            demoMap.selectAll("path.community")
+                  .attr("visibility", "hidden");
+            showDemoButton.attr('clicked', false)
+          }
+          else {
+            showDemoButton.text("Remove Demographic Overlay");
+            demoMap.selectAll("path.community")
+                  .attr("visibility", "")
+                  .attr("stroke-width", 0)
+            showDemoButton.attr('clicked', true)
+          }
 
           // map.selectAll("path.precinct")
           //    .attr("stroke-width", 0)
@@ -434,7 +442,7 @@
           let colorScale = d3
             .scaleQuantile()
             .domain(Object.values(precinctCrimeCount))
-            .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"]);
+            .range(d3.schemeGreys[5]);
 
           //color precincts
           map.selectAll(".precinct").style("fill", (d) => {
