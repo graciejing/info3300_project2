@@ -30,7 +30,9 @@
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
       //demographic map
-      const demoMap = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const demoMap = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       //linegraph stuff
       const linewidth = linegraph.attr("width");
@@ -50,7 +52,9 @@
         // let zipcodes = await d3.json("zip_code_040114.geojson");
         // console.log(zipcodes);
 
-        let neighborhoods = await d3.json("Neighborhood Tabulation Areas (NTA).geojson");
+        let neighborhoods = await d3.json(
+          "Neighborhood Tabulation Areas (NTA).geojson"
+        );
         // console.log(neighborhoods);
 
         // let communities = await d3.json("Community Districts.geojson");
@@ -59,7 +63,6 @@
         // a CSV dataset of demographics of NYC
         let demographics = await d3.csv("demo_2018_acs5yr_nta.csv");
         // console.log(demographics);
-
 
         // create d3 time objects
         let timeParser = d3.timeParse("%m/%d/%Y");
@@ -82,17 +85,16 @@
         // console.log(hateCrimes);
 
         // clean up demographic data
-        demographics.forEach(d => {
-          d.asian = Number(d['AsnNHE'].replace(/,/g, ""))
-          d.hispanic = Number(d['Hsp1E'].replace(/,/g, ""))
-          d.white = Number(d['WtNHE'].replace(/,/g, ""))
-          d.native = Number(d['AIANNHE'].replace(/,/g, ""))
-          d.black = Number(d['BlNHE'].replace(/,/g, ""))
-          d.hawaiianpi = Number(d['NHPINHE'].replace(/,/g, ""))
-          d.other = Number(d['OthNHE'].replace(/,/g, ""))
-          d.twoplus = Number(d['Rc2plNHE'].replace(/,/g, ""))
-        })
-
+        demographics.forEach((d) => {
+          d.asian = Number(d["AsnNHE"].replace(/,/g, ""));
+          d.hispanic = Number(d["Hsp1E"].replace(/,/g, ""));
+          d.white = Number(d["WtNHE"].replace(/,/g, ""));
+          d.native = Number(d["AIANNHE"].replace(/,/g, ""));
+          d.black = Number(d["BlNHE"].replace(/,/g, ""));
+          d.hawaiianpi = Number(d["NHPINHE"].replace(/,/g, ""));
+          d.other = Number(d["OthNHE"].replace(/,/g, ""));
+          d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
+        });
 
         // clean up police precincts data
         // precincts.features.forEach((d) => {
@@ -115,48 +117,63 @@
         let filteredHateCrimes = hateCrimes;
 
         //create map for precincts
-        var precinctProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], precincts);
+        var precinctProjection = d3
+          .geoMercator()
+          .fitSize([mapWidth, mapHeight], precincts);
         var precinctPath = d3.geoPath().projection(precinctProjection);
-        map.selectAll("path.precinct")
-           .data(precincts.features)
-           .join("path")
-           .attr("class", d =>`precinct p${d.properties.precinct}`)
-           .attr("stroke", "black")
-           .attr("stroke-width", 1)
-           .attr("d", precinctPath)
-           .on("click", updateSelected);
+        map
+          .selectAll("path.precinct")
+          .data(precincts.features)
+          .join("path")
+          .attr("class", (d) => `precinct p${d.properties.precinct}`)
+          .attr("stroke", "black")
+          .attr("stroke-width", 1)
+          .attr("d", precinctPath)
+          .on("click", updateSelected);
 
-        let races = ['asian','black','hispanic','white','native','hawaiianpi', 'other', 'twoplus'];
-        let demoScale = d3.scaleOrdinal()
-                          .domain(races)
-                          .range(d3.schemeCategory10);
+        let races = [
+          "asian",
+          "black",
+          "hispanic",
+          "white",
+          "native",
+          "hawaiianpi",
+          "other",
+          "twoplus",
+        ];
+        let demoScale = d3
+          .scaleOrdinal()
+          .domain(races)
+          .range(d3.schemeCategory10);
 
-        var demoProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], neighborhoods);
+        var demoProjection = d3
+          .geoMercator()
+          .fitSize([mapWidth, mapHeight], neighborhoods);
         var demoPath = d3.geoPath().projection(demoProjection);
-        demoMap.selectAll("path.neighborhood")
-              .data(neighborhoods.features)
-              .join("path")
-              .attr("class", "neighborhood")//d =>`zipcode z${d.properties.precinct}`)
-              .attr("stroke", "black")
-              .attr("stroke-width", 1)
-              .attr("d", demoPath)
-              .attr("opacity", 0.5)
-              .attr("fill", d => demoScale(getDomDemo(d)))
-              .attr("visibility", "hidden")
+        demoMap
+          .selectAll("path.neighborhood")
+          .data(neighborhoods.features)
+          .join("path")
+          .attr("class", "neighborhood") //d =>`zipcode z${d.properties.precinct}`)
+          .attr("stroke", "black")
+          .attr("stroke-width", 1)
+          .attr("d", demoPath)
+          .attr("opacity", 0.5)
+          .attr("fill", (d) => demoScale(getDomDemo(d)))
+          .attr("visibility", "hidden");
 
-        console.log(demoScale('white'))
-
+        console.log(demoScale("white"));
 
         function getDomDemo(d) {
           // console.log(d)
           // console.log(d.properties['ntacode'])
-          n = demographics.filter(demo => {
+          n = demographics.filter((demo) => {
             // console.log(demo['GeoID']);
-            return demo['GeoID'] === d.properties['ntacode']
-          })
-          maxPop = 0
-          domPop = null
-          races.forEach(r => {
+            return demo["GeoID"] === d.properties["ntacode"];
+          });
+          maxPop = 0;
+          domPop = null;
+          races.forEach((r) => {
             // console.log(r)
             if (n[0][r] > maxPop) {
               maxPop = n[0][r];
@@ -168,20 +185,21 @@
         }
 
         //create button to show demographic overlay
-        let showDemoButton = d3.select("button#demographic")
-                                .on("click", showDemographics)
+        let showDemoButton = d3
+          .select("button#demographic")
+          .on("click", showDemographics);
 
         function showDemographics() {
           // if
-          console.log('button')
-          demoMap.selectAll("path.neighborhood")
-                .attr("visibility", "")
-                .attr("stroke-width", 0)
+          console.log("button");
+          demoMap
+            .selectAll("path.neighborhood")
+            .attr("visibility", "")
+            .attr("stroke-width", 0);
 
           // map.selectAll("path.precinct")
           //    .attr("stroke-width", 0)
         }
-
 
         //create filters for hate crime types
         var hateCrimeTypes = [];
@@ -226,13 +244,14 @@
         });
 
         //adding details for precinct on click
-        let details = d3.select("#details")
-                        .append("text")
-                        .attr("id", "precinct")
-                        .attr("x", 0)
-                        .attr("y", 0)
-                        .attr("fill", "black")
-                        .text("No selected precincts");
+        let details = d3
+          .select("#details")
+          .append("text")
+          .attr("id", "precinct")
+          .attr("x", 0)
+          .attr("y", 0)
+          .attr("fill", "black")
+          .text("No selected precincts");
 
         let selectedPrecincts = [];
 
@@ -245,21 +264,20 @@
           console.log(selectedPrecincts);
           // if (selected === precinctNumber) {
           if (selectedPrecincts.includes(precinctNumber)) {
-            console.log('here')
-            d3.selectAll(`path.p${precinctNumber}`).each(function() {
+            console.log("here");
+            d3.selectAll(`path.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", "1");
             });
-            selectedPrecincts = selectedPrecincts.filter(d => d !== precinctNumber);
+            selectedPrecincts = selectedPrecincts.filter(
+              (d) => d !== precinctNumber
+            );
             if (selectedPrecincts === []) {
               txt.text("No selected precincts");
-            }
-            else {
+            } else {
               txt.text(`Selected Precincts: ${selectedPrecincts}`);
             }
-
-          }
-          else {
-            d3.selectAll(`path.p${precinctNumber}`).each(function() {
+          } else {
+            d3.selectAll(`path.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", "3");
             });
 
@@ -269,19 +287,30 @@
 
           updateFiltered();
           // updatePrecincts();
-
         }
+        //update the mini graphs based on filtered data on selected precincts
+        //add to updatefilters
+        function updateDetails() {
+          filteredHateCrimes = hateCrimes.filter((d) => {
+              let include = false;
+              //check satisfies hate crime type filters
+              selectedPrecincts.forEach((number) => {
+                if (d.precinct === number {
+                  include = true;
+                }
+              return include;
+            });
 
         function clearFilters() {
           filters.selectAll(".type").each(function () {
             d3.select(this).property("checked", false);
           });
 
-          selectedPrecincts.forEach(precinctNumber => {
-            d3.selectAll(`path.p${precinctNumber}`).each(function() {
+          selectedPrecincts.forEach((precinctNumber) => {
+            d3.selectAll(`path.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", "1");
             });
-          })
+          });
           selectedPrecincts = [];
           updatePrecincts();
         }
@@ -363,7 +392,6 @@
 
         //update precincts based on filtered data
         function updateFiltered() {
-
           let checkedFilters = [];
           //get filtered data
           filters.selectAll(".type").each(function () {
@@ -374,11 +402,10 @@
             }
           });
 
-          filteredHateCrimes = hateCrimes.filter(d => {
+          filteredHateCrimes = hateCrimes.filter((d) => {
             let include = true;
-
             //check satisfies hate crime type filters
-            checkedFilters.forEach(fil => {
+            checkedFilters.forEach((fil) => {
               // console.log(fil);
               let key = fil.attr("param");
               let val = fil.attr("name");
@@ -389,16 +416,15 @@
 
             return include;
           });
+
           console.log(filteredHateCrimes);
 
           precincts.features.forEach((d) => {
             precinctCrimeCount[d.properties.precinct] = 0;
-
           });
           filteredHateCrimes.forEach((d) => {
             precinctCrimeCount[d.precinct] += 1;
           });
-
         }
 
         function updatePrecincts() {
@@ -411,17 +437,14 @@
             .range(["#fff", "#d1e8ed", "#adc2da", "#8879b3", "#762b80"]);
 
           //color precincts
-          map.selectAll(".precinct")
-             .style("fill", d => {
-               count = precinctCrimeCount[d.properties.precinct];
-               if (count === 0) {
-                 return "lightgrey"
-               }
-               else {
-                 return colorScale(count);
-               }
-             });
-
+          map.selectAll(".precinct").style("fill", (d) => {
+            count = precinctCrimeCount[d.properties.precinct];
+            if (count === 0) {
+              return "lightgrey";
+            } else {
+              return colorScale(count);
+            }
+          });
         }
 
         updatePrecincts();
