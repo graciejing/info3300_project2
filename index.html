@@ -58,27 +58,26 @@
         // console.log(PUMAtoCDmapping);
 
         const boroughToNum = {
-          "Queens": "4",
-          "Bronx": "2",
-          "Manhattan": "1",
-          "Brooklyn": "3",
+          Queens: "4",
+          Bronx: "2",
+          Manhattan: "1",
+          Brooklyn: "3",
           "Staten Island": "5",
         };
 
-
         function getCDNum(s, boro) {
-          i1 = s.indexOf("District") + 9
-          i2 = s.indexOf("--")
-          cds = s.slice(i1,i2).split(" & ")
+          i1 = s.indexOf("District") + 9;
+          i2 = s.indexOf("--");
+          cds = s.slice(i1, i2).split(" & ");
           cds.forEach((item, i) => {
             if (item.length < 2) {
-              item = "0"+item;
+              item = "0" + item;
             }
-            cds[i] = boroughToNum[boro]+item
+            cds[i] = boroughToNum[boro] + item;
           });
 
           return cds;
-        };
+        }
 
         // const PUMAtoBoroCD = {};
         // PUMAtoCDmapping.forEach((row, i) => {
@@ -100,18 +99,17 @@
 
         // clean up demographic data
         demographics.pop();
-        demographics.forEach(d => {
-          d.asian = Number(d['AsnNHE'].replace(/,/g, ""))
-          d.hispanic = Number(d['Hsp1E'].replace(/,/g, ""))
-          d.white = Number(d['WtNHE'].replace(/,/g, ""))
-          d.native = Number(d['AIANNHE'].replace(/,/g, ""))
-          d.black = Number(d['BlNHE'].replace(/,/g, ""))
-          d.hawaiianpi = Number(d['NHPINHE'].replace(/,/g, ""))
-          d.other = Number(d['OthNHE'].replace(/,/g, ""))
-          d.twoplus = Number(d['Rc2plNHE'].replace(/,/g, ""))
-          d.boro_cd = getCDNum(d['GeogName'], d['Borough'])//PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
-        })
-
+        demographics.forEach((d) => {
+          d.asian = Number(d["AsnNHE"].replace(/,/g, ""));
+          d.hispanic = Number(d["Hsp1E"].replace(/,/g, ""));
+          d.white = Number(d["WtNHE"].replace(/,/g, ""));
+          d.native = Number(d["AIANNHE"].replace(/,/g, ""));
+          d.black = Number(d["BlNHE"].replace(/,/g, ""));
+          d.hawaiianpi = Number(d["NHPINHE"].replace(/,/g, ""));
+          d.other = Number(d["OthNHE"].replace(/,/g, ""));
+          d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
+          d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); //PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
+        });
 
         // clean up police precincts data
         // precincts.features.forEach((d) => {
@@ -121,6 +119,7 @@
 
         console.log(hateCrimes);
         console.log(precincts);
+        console.log("hi");
         console.log(demographics);
         console.log(communities);
 
@@ -137,46 +136,60 @@
           .geoMercator()
           .fitSize([mapWidth, mapHeight], precincts);
         var precinctPath = d3.geoPath().projection(precinctProjection);
-        map.selectAll("path.precinct")
-           .data(precincts.features)
-           .join("path")
-           .attr("class", d =>`precinct p${d.properties.precinct}`)
-           .attr("stroke", "black")
-           .attr("stroke-width", 1)
-           .attr("d", precinctPath)
-           .on("click", updateSelected);
+        map
+          .selectAll("path.precinct")
+          .data(precincts.features)
+          .join("path")
+          .attr("class", (d) => `precinct p${d.properties.precinct}`)
+          .attr("stroke", "black")
+          .attr("stroke-width", 1)
+          .attr("d", precinctPath)
+          .on("click", updateSelected);
 
-        let races = ['asian','black','hispanic','white','native','hawaiianpi', 'other', 'twoplus', null];
-        let demoScale = d3.scaleOrdinal()
-                          .domain(races)
-                          .range(d3.schemeCategory10);
+        let races = [
+          "asian",
+          "black",
+          "hispanic",
+          "white",
+          "native",
+          "hawaiianpi",
+          "other",
+          "twoplus",
+          null,
+        ];
+        let demoScale = d3
+          .scaleOrdinal()
+          .domain(races)
+          .range(d3.schemeCategory10);
 
-        var demoProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], communities);
+        var demoProjection = d3
+          .geoMercator()
+          .fitSize([mapWidth, mapHeight], communities);
         var demoPath = d3.geoPath().projection(demoProjection);
-        demoMap.selectAll("path.community")
-              .data(communities.features)
-              .join("path")
-              .attr("class", "community")//d =>`zipcode z${d.properties.precinct}`)
-              .attr("stroke", "black")
-              .attr("stroke-width", 1)
-              .attr("d", demoPath)
-              .attr("opacity", 0.5)
-              .attr("fill", d => demoScale(getDomDemo(d)))
-              .attr("visibility", "hidden")
+        demoMap
+          .selectAll("path.community")
+          .data(communities.features)
+          .join("path")
+          .attr("class", "community") //d =>`zipcode z${d.properties.precinct}`)
+          .attr("stroke", "black")
+          .attr("stroke-width", 1)
+          .attr("d", demoPath)
+          .attr("opacity", 0.5)
+          .attr("fill", (d) => demoScale(getDomDemo(d)))
+          .attr("visibility", "hidden");
 
         function getDomDemo(d) {
-
-          n = demographics.filter(demo => {
-            return demo.boro_cd.includes(d.properties['boro_cd'])
+          n = demographics.filter((demo) => {
+            return demo.boro_cd.includes(d.properties["boro_cd"]);
           });
           if (n.length === 0) {
             return null;
           }
           // console.log(d);
-          // console.log(n);
-          maxPop = 0
-          domPop = null
-          races.forEach(r => {
+          console.log(n);
+          maxPop = 0;
+          domPop = null;
+          races.forEach((r) => {
             if (n[0][r] > maxPop) {
               maxPop = n[0][r];
               domPop = r;
@@ -184,25 +197,63 @@
           });
           return domPop;
         }
+        //get top three values
+        function getTopThree(d) {
+          n = demographics.filter((demo) => {
+            return demo.boro_cd.includes(d.properties["boro_cd"]);
+          });
+          if (n.length === 0) {
+            return null;
+          }
+          // console.log(d);
+          // console.log(n);
+          pop1 = 0;
+          pop2 = 0;
+          pop3 = 0;
+          firstpop = null;
+          secondpop = null;
+          thirdpop = null;
 
+          topThree = [];
+          races.forEach((r) => {
+            if (n[0][r] > pop1) {
+              pop3 = pop2;
+              pop2 = pop1;
+              pop1 = n[0][r];
+              firstpop = r;
+            } else if (n[0][r] > pop2) {
+              pop3 = pop2;
+              pop2 = n[0][r];
+              secondpop = r;
+            } else if (n[0][r] > pop3) {
+              pop3 = n[0][r];
+              thirdpop = r;
+            }
+          });
+          topThree.push(firstpop);
+          topThree.push(secondpop);
+          topThree.push(thirdpop);
+
+          return topThree;
+        }
+        //creates a new dataset of only stuff from that precinct
+        function filterPrecincts() {}
         //create button to show demographic overlay
-        let showDemoButton = d3.select("button#demographic")
-        showDemoButton.attr("clicked", false)
-                      .on("click", showDemographics);
+        let showDemoButton = d3.select("button#demographic");
+        showDemoButton.attr("clicked", false).on("click", showDemographics);
 
         function showDemographics() {
-          if (showDemoButton.attr('clicked') === 'true') {
+          if (showDemoButton.attr("clicked") === "true") {
             showDemoButton.text("Show Demographic Overlay");
-            demoMap.selectAll("path.community")
-                  .attr("visibility", "hidden");
-            showDemoButton.attr('clicked', false)
-          }
-          else {
+            demoMap.selectAll("path.community").attr("visibility", "hidden");
+            showDemoButton.attr("clicked", false);
+          } else {
             showDemoButton.text("Remove Demographic Overlay");
-            demoMap.selectAll("path.community")
-                  .attr("visibility", "")
-                  .attr("stroke-width", 0)
-            showDemoButton.attr('clicked', true)
+            demoMap
+              .selectAll("path.community")
+              .attr("visibility", "")
+              .attr("stroke-width", 0);
+            showDemoButton.attr("clicked", true);
           }
 
           // map.selectAll("path.precinct")
@@ -296,18 +347,6 @@
           updateFiltered();
           // updatePrecincts();
         }
-        //update the mini graphs based on filtered data on selected precincts
-        //add to updatefilters
-        function updateDetails() {
-          filteredHateCrimes = hateCrimes.filter((d) => {
-              let include = false;
-              //check satisfies hate crime type filters
-              selectedPrecincts.forEach((number) => {
-                if (d.precinct === number {
-                  include = true;
-                }
-              return include;
-            });
 
         function clearFilters() {
           filters.selectAll(".type").each(function () {
@@ -412,6 +451,7 @@
 
           filteredHateCrimes = hateCrimes.filter((d) => {
             let include = true;
+
             //check satisfies hate crime type filters
             checkedFilters.forEach((fil) => {
               // console.log(fil);
@@ -424,7 +464,6 @@
 
             return include;
           });
-
           console.log(filteredHateCrimes);
 
           precincts.features.forEach((d) => {
