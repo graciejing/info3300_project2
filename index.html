@@ -426,21 +426,27 @@
             }
           });
 
-          filteredHateCrimes = hateCrimes.filter((d) => {
-            let include = false;
+          if (checkedFilters.length === 0) {
+            filteredHateCrimes = hateCrimes
+          }
+          else {
+            filteredHateCrimes = hateCrimes.filter((d) => {
+              let include = false;
 
-            //check satisfies hate crime type filters
-            checkedFilters.forEach((fil) => {
-              // console.log(fil);
-              let key = fil.attr("param");
-              let val = fil.attr("name");
-              if (d[key] === val) {
-                include = true;
-              }
+              //check satisfies hate crime type filters
+              checkedFilters.forEach((fil) => {
+                // console.log(fil);
+                let key = fil.attr("param");
+                let val = fil.attr("name");
+                if (d[key] === val) {
+                  include = true;
+                }
+              });
+
+              return include;
             });
+          }
 
-            return include;
-          });
           console.log(filteredHateCrimes);
 
           updatePrecincts();
