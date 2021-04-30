@@ -4,15 +4,6 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <style>
-      .outline {
-        stroke: black;
-        stroke-width: 1px;
-        fill: none;
-      }
-
-      .mouseover {
-        stroke-width: 3px;
-      }
     </style>
   </head>
 
@@ -49,6 +40,9 @@
       const demoMap = svg
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      const outlines = svg.append("g")
+                          .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
       // create linegraph
       const linewidth = linegraph.attr("width");
@@ -108,14 +102,6 @@
         console.log(demographics);
         console.log(communities);
 
-        //initialize hate crime frequency dictionary
-        let precinctCrimeCount = {};
-        precincts.features.forEach((d) => {
-          precinctCrimeCount[d.properties.precinct] = 0;
-        });
-
-        let filteredHateCrimes = hateCrimes;
-
         let colorScale = d3.scaleQuantile()
 
         //create map for precincts
@@ -125,10 +111,23 @@
            .data(precincts.features)
            .join("path")
            .attr("class", d =>`precinct p${d.properties.precinct}`)
+           .attr("d", precinctPath);
+
+        //outline
+        outlines.selectAll("path.outline")
+           .data(precincts.features)
+           .join("path")
+           .attr("class", d =>`precinct outline p${d.properties.precinct}`)
+           .attr("fill-opacity", 0)
            .attr("stroke", "black")
            .attr("stroke-width", 1)
            .attr("d", precinctPath)
            .on("click", updateSelected);
+
+           // .append("path")
+           // .attr("d", precinctPath)
+           // .attr("class", "activeRegion")
+
 
         //create demographic overlay
         let races = ['asian','black','hispanic','white','native','hawaiianpi', 'other', 'twoplus', null];
@@ -138,17 +137,16 @@
 
         var demoProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], communities);
         var demoPath = d3.geoPath().projection(demoProjection);
-        demoMap
-          .selectAll("path.community")
-          .data(communities.features)
-          .join("path")
-          .attr("class", "community") //d =>`zipcode z${d.properties.precinct}`)
-          .attr("stroke", "black")
-          .attr("stroke-width", 1)
-          .attr("d", demoPath)
-          .attr("opacity", 0.5)
-          .attr("fill", (d) => demoScale(getDomDemo(d)))
-          .attr("visibility", "hidden");
+        demoMap.selectAll("path.community")
+               .data(communities.features)
+               .join("path")
+               .attr("class", "community") //d =>`zipcode z${d.properties.precinct}`)
+               .attr("stroke", "black")
+               .attr("stroke-width", 1)
+               .attr("d", demoPath)
+               .attr("opacity", 0.5)
+               .attr("fill", (d) => demoScale(getDomDemo(d)))
+               .attr("visibility", "hidden");
 
         //create button to show demographic overlay
         let showDemoButton = d3.select("button#demographic");
@@ -167,30 +165,26 @@
 
         // create filters
         let filters = d3.select("#filters");
-        let crimeFilter = filters
-          .append("div")
-          .attr("id", "type")
-          .attr("class", "filter");
+        let crimeFilter = filters.append("div")
+                                 .attr("id", "type")
+                                 .attr("class", "filter");
 
-        let updateButton = filters
-          .append("button")
-          .attr("id", "update")
-          .text("Update")
-          .on("click", updateFiltered);
+        let updateButton = filters.append("button")
+                                  .attr("id", "update")
+                                  .text("Update")
+                                  .on("click", updateFiltered);
 
-        let clearButton = filters
-          .append("button")
-          .attr("id", "clear")
-          .text("Clear")
-          .on("click", clearFilters);
+        let clearButton = filters.append("button")
+                                 .attr("id", "clear")
+                                 .text("Clear")
+                                 .on("click", clearFilters);
 
         hateCrimeTypes.forEach((d) => {
-          crimeFilter
-            .append("input")
-            .attr("name", d)
-            .attr("type", "checkbox")
-            .attr("class", "type")
-            .attr("param", "Bias Motive Description");
+          crimeFilter.append("input")
+                     .attr("name", d)
+                     .attr("type", "checkbox")
+                     .attr("class", "type")
+                     .attr("param", "Bias Motive Description");
 
           crimeFilter.append("label").attr("for", d).text(d);
         });
@@ -210,19 +204,19 @@
         // drawLegend(colorLegend, colorScale)
 
         //adding details for precinct on click
-        let details = d3
-          .select("#details")
-          .append("text")
-          .attr("id", "precinct")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("fill", "black")
-          .text("No selected precincts");
+        let details = d3.select("#details")
+                        .append("text")
+                        .attr("id", "precinct")
+                        .attr("x", 0)
+                        .attr("y", 0)
+                        .attr("fill", "black")
+                        .text("No selected precincts");
 
         // let clickmesh = map.append("path").attr("class", "mouseover outline").attr("d", "");
 
+        let filteredHateCrimes = hateCrimes;
         let selectedPrecincts = [];
-
+        let selectedHateCrimes = hateCrimes;
 
 
 
@@ -320,13 +314,12 @@
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
 
-
           let txt = d3.select("text#precinct");
 
           // already selected
           if (selectedPrecincts.includes(precinctNumber)) {
-            d3.selectAll(`path.p${precinctNumber}`).each(function() {
-              d3.select(this).attr("stroke-width", "1");
+            d3.selectAll(`.outline.p${precinctNumber}`).each(function() {
+              d3.select(this).attr("stroke-width", 1);
             });
             selectedPrecincts = selectedPrecincts.filter(
               (d) => d !== precinctNumber
@@ -337,13 +330,17 @@
               txt.text(`Selected Precincts: ${selectedPrecincts}`);
             }
           } else {
-            d3.selectAll(`path.p${precinctNumber}`).each(function () {
-              d3.select(this).attr("stroke-width", "3");
+            // console.log(d3.selectAll(`.outline.p${precinctNumber}`))
+            d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
+              // console.log(d3.select(this))
+              d3.select(this).attr("stroke-width", 3);
+              // console.log(d3.select(this))
             });
 
             selectedPrecincts.push(precinctNumber);
             txt.text(`Selected Precincts: ${selectedPrecincts}`);
-            displayBar(selectedPrecincts);
+
+            // displayBar(selectedPrecincts);
           }
 
           // updateFiltered();
@@ -359,10 +356,14 @@
             showDemoButton.attr("clicked", false);
           } else {
             showDemoButton.text("Remove Demographic Overlay");
-            demoMap
-              .selectAll("path.community")
-              .attr("visibility", "")
-              .attr("stroke-width", 0);
+            demoMap.selectAll("path.community")
+                   .attr("visibility", "")
+                   .attr("stroke-width", 0);
+            d3.selectAll(".outline").each(function() {
+              console.log(d3.select(this))
+              d3.select(this).raise()
+            });
+            // console.log(precinctAreas.selectAll(".outline"))
             showDemoButton.attr("clicked", true);
           }
 
@@ -376,7 +377,7 @@
           });
 
           selectedPrecincts.forEach((precinctNumber) => {
-            d3.selectAll(`path.p${precinctNumber}`).each(function () {
+            d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", "1");
             });
           });
@@ -419,6 +420,9 @@
         }
 
         function updatePrecincts() {
+          //initialize hate crime frequency dictionary
+          let precinctCrimeCount = {};
+
           // updateFiltered();
           precincts.features.forEach((d) => {
             precinctCrimeCount[d.properties.precinct] = 0;
@@ -447,7 +451,7 @@
           //update legend
           drawLegend(colorLegend,colorScale);
           //put code updating here, assume dataset is filteredhatecrimes
-          displayBar();
+          // displayBar();
         }
 
         //creates a new dataset of only stuff from that precinct
@@ -492,60 +496,39 @@
             (d) => d["Bias Motive Description"]
           );
           console.log(totalExtent);
-          var y = d3
-            .scaleLinear()
-            .domain([0, totalExtent[1]])
-            .range([chartHeight, 0]);
+
+          var y = d3.scaleLinear()
+                    .domain([0, totalExtent[1]])
+                    .range([chartHeight, 0]);
           let leftAxis = d3.axisLeft(y);
-          let leftGridlines = d3
-            .axisLeft(y)
-            .tickSize(-chartWidth - 10)
-            .tickFormat("");
-          annotations
-            .append("g")
-            .attr("class", "y axis")
-            .attr(
-              "transform",
-              "translate(" + (margin.left - 10) + "," + margin.top + ")"
-            )
-            .call(leftAxis);
-          annotations
-            .append("g")
-            .attr("class", "y gridlines")
-            .attr(
-              "transform",
-              "translate(" + (margin.left - 10) + "," + margin.top + ")"
-            )
-            .call(leftGridlines);
-          var color = d3
-            .scaleOrdinal(d3.schemeCategory10)
-            .domain(hateCrimeTypes);
-          chartArea
-            .append("g")
-            .selectAll("g")
+          let leftGridlines = d3.axisLeft(y)
+                                .tickSize(-chartWidth - 10)
+                                .tickFormat("");
+          annotations.append("g")
+                     .attr("class", "y axis")
+                     .attr("transform","translate(" + (margin.left - 10) + "," + margin.top + ")")
+                     .call(leftAxis);
+          annotations.append("g")
+                     .attr("class", "y gridlines")
+                     .attr("transform","translate(" + (margin.left - 10) + "," + margin.top + ")")
+                     .call(leftGridlines);
+
+          var color = d3.scaleOrdinal(d3.schemeCategory10).domain(hateCrimeTypes);
+          chartArea.append("g")
+                   .selectAll("g")
             //appendthe correctbars
-            .data(stackedData)
-            .enter()
-            .append("g")
-            .attr("fill", function (d) {
-              return color(d.key);
-            })
-            .selectAll("rect")
-            .data(function (d) {
-              return d;
-            })
-            .enter()
-            .append("rect")
-            .attr("x", function (d) {
-              return x(d.data.actor);
-            })
-            .attr("y", function (d) {
-              return y(d[1]);
-            })
-            .attr("height", function (d) {
-              return y(d[0]) - y(d[1]);
-            })
-            .attr("width", x.bandwidth());
+                   .data(stackedData)
+                   .enter()
+                   .append("g")
+                   .attr("fill", function (d) { return color(d.key);})
+                   .selectAll("rect")
+                   .data(function (d) {return d;})
+                   .enter()
+                   .append("rect")
+                   .attr("x", function (d) { return x(d.data.actor);})
+                   .attr("y", function (d) { return y(d[1]);})
+                   .attr("height", function (d) { return y(d[0]) - y(d[1]);})
+                   .attr("width", x.bandwidth());
         }
         function getDomDemo(d) {
           n = demographics.filter((demo) => {
