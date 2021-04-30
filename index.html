@@ -242,87 +242,9 @@
           .attr("fill", "black")
           .text("No selected precincts");
 
-        // let clickmesh = map.append("path").attr("class", "mouseover outline").attr("d", "");
-
         let filteredHateCrimes = hateCrimes;
         let selectedPrecincts = [];
         let selectedHateCrimes = hateCrimes;
-
-        //line graph scales
-        // const crimeExtent = d3.extent(data, (d) => d["precinctstuff"]);
-        // const crimeScale = d3
-        //   .scaleLinear()
-        //   .domain(crimeExtent)
-        //   .range([line_chartHeight, 0]);
-        //
-        // const dateExtent = d3.extent(data, (d) => d["date"]);
-        // const dateScale = d3
-        //   .scaleTime()
-        //   .domain(dateExtent)
-        //   .range([0, chartWidth]);
-        // // Y axis
-        // let leftAxis = d3.axisLeft(crimeScale);
-        // let leftGridlines = d3
-        //   .axisLeft(crimeScale)
-        //   .tickSize(-chartWidth - 10)
-        //   .tickFormat("");
-        // annotations
-        //   .append("g")
-        //   .attr("class", "y axis")
-        //   .attr(
-        //     "transform",
-        //     `translate(${linemargin.left - 10},${linemargin.top})`
-        //   )
-        //   .call(leftAxis);
-        // annotations
-        //   .append("g")
-        //   .attr("class", "y gridlines")
-        //   .attr(
-        //     "transform",
-        //     `translate(${linemargin.left - 10},${linemargin.top})`
-        //   )
-        //   .call(leftGridlines);
-        // // X axis
-        // let bottomAxis = d3.axisBottom(dateScale);
-        // let bottomGridlines = d3
-        //   .axisBottom(dateScale)
-        //   .tickSize(-line_chartHeight - 10)
-        //   .tickFormat("");
-        // annotations
-        //   .append("g")
-        //   .attr("class", "x axis")
-        //   .attr(
-        //     "transform",
-        //     `translate(${linemargin.left},${
-        //       line_chartHeight + linemargin.top + 10
-        //     })`
-        //   )
-        //   .call(bottomAxis);
-        // annotations
-        //   .append("g")
-        //   .attr("class", "x gridlines")
-        //   .attr(
-        //     "transform",
-        //     `translate(${linemargin.left},${
-        //       line_chartHeight + linemargin.top + 10
-        //     })`
-        //   )
-        //   .call(bottomGridlines);
-        // var lineGen = d3
-        //   .line()
-        //   .x((d) => dateScale(d["date"]))
-        //   .y((d) => crimeScale(d["frequncy of crimes"]))
-        //   .curve(d3.curveMonotoneX); // this configures whether straight lines connect your data points
-        // //  or if it blends between points using a curve; see d3.line docs
-        // //final graph
-        // chartArea
-        //   .append("path")
-        //   .datum(data)
-        //   .attr("class", "line")
-        //   .attr("fill", "none")
-        //   .attr("stroke", "steelblue")
-        //   .attr("stroke-width", 3)
-        //   .attr("d", lineGen);
 
         function getCDNum(s, boro) {
           i1 = s.indexOf("District") + 9;
@@ -484,7 +406,7 @@
           //update legend
           drawLegend(colorLegend, colorScale);
           //put code updating here, assume dataset is filteredhatecrimes
-          // displayBar();
+          displayBar();
         }
 
         //creates a new dataset of only stuff from that precinct
@@ -500,8 +422,7 @@
           // console.log(hateCrimeCount);
 
           filteredHateCrimes.forEach((d) => {
-            console.log(d["Bias Motive Description"]);
-            console.log(hateCrimeCount[d["Bias Motive Description"]]);
+    
             hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
           });
 
