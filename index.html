@@ -183,7 +183,8 @@
           }
         });
         hateCrimeTypes.sort();
-        hateCrimeTypes.pop(null);
+        console.log(hateCrimeTypes);
+        // hateCrimeTypes.pop(null);
 
         // create filters
         let filters = d3.select("#filters");
@@ -362,7 +363,7 @@
 
             selectedPrecincts.push(precinctNumber);
             txt.text(`Selected Precincts: ${selectedPrecincts}`);
-            displayBar(selectedPrecincts);
+            displayBar();
           }
 
           // updateFiltered();
@@ -471,22 +472,40 @@
 
         //creates a new dataset of only stuff from that precinct
         //use filterdhatecrimes+ hatecrimetypes
+        //white {type: white number: 20}, black {type: white number: 20}
         function displayBar() {
-          for (var a = 0; a < hateCrimeTypes.length; a++) {
+          // console.log("hi");
           hateCrimeCount = {};
-          filteredHateCrimes.forEach((d) => {
-            if (d["Bias Motive Description"].includes(hateCrimeTypes[a])){
-              //builds the first "type: hatecrimetype"
-              hateCrimeCount["type"]=hateCrimeTypes[a];
-              //tabulates and builds the "number:hatecrime", goes through thewholelistpertype
-              for (var i = 0; i < d.length; i++) {
-                if (d["Bias Motive Description"] = hateCrimeTypes[a]){
-                  total +=1;
-                  hateCrimeCount["number"] =total;
-                }
-              }
-            }
+
+          hateCrimeTypes.forEach((r) => {
+            hateCrimeCount[r] = { type: r, number: 0 };
           });
+          // console.log(hateCrimeCount);
+
+          filteredHateCrimes.forEach((d) => {
+            console.log(d["Bias Motive Description"]);
+            console.log(hateCrimeCount[d["Bias Motive Description"]]);
+            hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
+          });
+
+          console.log(hateCrimeCount);
+
+          // for (var a = 0; a < hateCrimeTypes.length; a++) {
+          //   filteredHateCrimes.forEach((d) => {
+          //     if (d["Bias Motive Description"].includes(hateCrimeTypes[a])) {
+          //       //builds the first "type: hatecrimetype"
+          //       hateCrimeCount["type"] = hateCrimeTypes[a];
+          //       //tabulates and builds the "number:hatecrime", goes through thewholelistpertype
+          //       for (var i = 0; i < d.length; i++) {
+          //         total = 0;
+          //         if ((d[i]["Bias Motive Description"] = hateCrimeTypes[a])) {
+          //           total += 1;
+          //           hateCrimeCount["number"] = total;
+          //         }
+          //       }
+          //     }
+          // });
+          // }
           console.log(hateCrimeCount);
           console.log("hi");
           let bar = d3.select("svg#bar");
@@ -561,10 +580,7 @@
             .attr("fill", "steelblue")
             .attr("x", (d) => xScale(d["type"]))
             .attr("y", (d) => yScale(d["number"]))
-            .attr(
-              "height",
-              (d) => yScale(0) - yScale(d["number"])
-            )
+            .attr("height", (d) => yScale(0) - yScale(d["number"]))
             .attr("width", xScale.bandwidth());
         }
         function getDomDemo(d) {
