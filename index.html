@@ -3,17 +3,7 @@
   <head>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
-    <style>
-      .outline {
-        stroke: black;
-        stroke-width: 1px;
-        fill: none;
-      }
-
-      .mouseover {
-        stroke-width: 3px;
-      }
-    </style>
+    <style></style>
   </head>
 
   <body>
@@ -52,6 +42,10 @@
 
       //demographic map
       const demoMap = svg
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      const outlines = svg
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -112,14 +106,6 @@
         console.log(demographics);
         console.log(communities);
 
-        //initialize hate crime frequency dictionary
-        let precinctCrimeCount = {};
-        precincts.features.forEach((d) => {
-          precinctCrimeCount[d.properties.precinct] = 0;
-        });
-
-        let filteredHateCrimes = hateCrimes;
-
         let colorScale = d3.scaleQuantile();
 
         //create map for precincts
@@ -132,10 +118,23 @@
           .data(precincts.features)
           .join("path")
           .attr("class", (d) => `precinct p${d.properties.precinct}`)
+          .attr("d", precinctPath);
+
+        //outline
+        outlines
+          .selectAll("path.outline")
+          .data(precincts.features)
+          .join("path")
+          .attr("class", (d) => `precinct outline p${d.properties.precinct}`)
+          .attr("fill-opacity", 0)
           .attr("stroke", "black")
           .attr("stroke-width", 1)
           .attr("d", precinctPath)
           .on("click", updateSelected);
+
+        // .append("path")
+        // .attr("d", precinctPath)
+        // .attr("class", "activeRegion")
 
         //create demographic overlay
         let races = [
@@ -245,7 +244,9 @@
 
         // let clickmesh = map.append("path").attr("class", "mouseover outline").attr("d", "");
 
+        let filteredHateCrimes = hateCrimes;
         let selectedPrecincts = [];
+        let selectedHateCrimes = hateCrimes;
 
         //line graph scales
         // const crimeExtent = d3.extent(data, (d) => d["precinctstuff"]);
@@ -345,8 +346,8 @@
 
           // already selected
           if (selectedPrecincts.includes(precinctNumber)) {
-            d3.selectAll(`path.p${precinctNumber}`).each(function () {
-              d3.select(this).attr("stroke-width", "1");
+            d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
+              d3.select(this).attr("stroke-width", 1);
             });
             selectedPrecincts = selectedPrecincts.filter(
               (d) => d !== precinctNumber
@@ -357,13 +358,15 @@
               txt.text(`Selected Precincts: ${selectedPrecincts}`);
             }
           } else {
-            d3.selectAll(`path.p${precinctNumber}`).each(function () {
-              d3.select(this).attr("stroke-width", "3");
+            // console.log(d3.selectAll(`.outline.p${precinctNumber}`))
+            d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
+              // console.log(d3.select(this))
+              d3.select(this).attr("stroke-width", 3);
+              // console.log(d3.select(this))
             });
 
             selectedPrecincts.push(precinctNumber);
             txt.text(`Selected Precincts: ${selectedPrecincts}`);
-            displayBar();
           }
 
           // updateFiltered();
@@ -383,6 +386,11 @@
               .selectAll("path.community")
               .attr("visibility", "")
               .attr("stroke-width", 0);
+            d3.selectAll(".outline").each(function () {
+              console.log(d3.select(this));
+              d3.select(this).raise();
+            });
+            // console.log(precinctAreas.selectAll(".outline"))
             showDemoButton.attr("clicked", true);
           }
 
@@ -396,7 +404,7 @@
           });
 
           selectedPrecincts.forEach((precinctNumber) => {
-            d3.selectAll(`path.p${precinctNumber}`).each(function () {
+            d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", "1");
             });
           });
@@ -439,6 +447,9 @@
         }
 
         function updatePrecincts() {
+          //initialize hate crime frequency dictionary
+          let precinctCrimeCount = {};
+
           // updateFiltered();
           precincts.features.forEach((d) => {
             precinctCrimeCount[d.properties.precinct] = 0;
@@ -467,7 +478,7 @@
           //update legend
           drawLegend(colorLegend, colorScale);
           //put code updating here, assume dataset is filteredhatecrimes
-          displayBar();
+          // displayBar();
         }
 
         //creates a new dataset of only stuff from that precinct
