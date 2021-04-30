@@ -18,15 +18,15 @@
   <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
 
   <div id="filters"></div>
+  <svg id="bar" width="500" height="400"></svg>
+  <button id="demographic">Show Demographic Overlay</button>
   <div id="details">
     <h4>Details:</h4>
   </div>
-  <button id="demographic">Show Demographic Overlay</button>
+  <svg id="map" width="1200" height="800"></svg>
   <div id="legend"></div>
   <svg id="colorLegend" height="100" width="600" style="background: #fff; margin-top: 30px"></svg>
-  <svg id="map" width="1200" height="800"></svg>
-  <svg id="bar" width="1400" height="400"></svg>
-  <svg id="linegraph" width="1000" height="800"></svg>
+  <!-- <svg id="linegraph" width="1000" height="800"></svg> -->
 
   <script>
     //create cloropleth
@@ -52,12 +52,12 @@
       .append("g")
       .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    // create linegraph
-    const linewidth = linegraph.attr("width");
-    const lineheight = linegraph.attr("height");
-    const linemargin = { top: 10, right: 10, bottom: 50, left: 50 };
-    const line_chartWidth = linewidth - linemargin.left - linemargin.right;
-    const line_chartHeight = lineheight - linemargin.top - linemargin.bottom;
+    // // create linegraph
+    // const linewidth = linegraph.attr("width");
+    // const lineheight = linegraph.attr("height");
+    // const linemargin = { top: 10, right: 10, bottom: 50, left: 50 };
+    // const line_chartWidth = linewidth - linemargin.left - linemargin.right;
+    // const line_chartHeight = lineheight - linemargin.top - linemargin.bottom;
 
     const requestData = async function () {
       // a CSV dataset of NYPD hate crimes
@@ -99,50 +99,6 @@
         }
         d["precinct"] = d["Complaint Precinct Code"];
       });
-
-      // //creating legends
-      // let demoLegend = d3
-      //   .select("#legend")
-      //   .append("g")
-      //   .attr("id", "demoLegend");
-      // races.forEach((r) => {
-      //   demoLegend.append("span").text(r).style("color", demoScale(r));
-      // });
-      // demoLegend
-      //   .append("span")
-      //   .text("no demographic data")
-      //   .style("color", demoScale(null));
-      //
-      // let colorLegend = d3.select("#colorLegend");
-      // colorLegend.append("g").attr("class", "colorbar axis");
-      // drawLegend(colorLegend, colorScale)
-
-      //adding details for precinct on click
-      // let details = d3
-      //   .select("#details")
-      //   .append("text")
-      //   .attr("id", "precinct")
-      //   .attr("x", 0)
-      //   .attr("y", 0)
-      //   .attr("fill", "black")
-      //   .text("No selected precincts");
-
-      // let filteredHateCrimes = hateCrimes;
-      // let selectedPrecincts = [];
-      // let selectedHateCrimes = hateCrimes;
-
-        // function getCDNum(s, boro) {
-        //   i1 = s.indexOf("District") + 9;
-        //   i2 = s.indexOf("--");
-        //   cds = s.slice(i1, i2).split(" & ");
-        //   cds.forEach((item, i) => {
-        //     if (item.length < 2) {
-        //       item = "0" + item;
-        //     }
-        //     cds[i] = boroughToNum[boro] + item;
-        //   });
-        // };
-
 
       // clean up demographic data
       demographics.pop();
@@ -189,10 +145,6 @@
         .attr("d", precinctPath)
         .on("click", updateSelected);
 
-      // .append("path")
-      // .attr("d", precinctPath)
-      // .attr("class", "activeRegion")
-
       //create demographic overlay
       let races = [
         "asian",
@@ -205,6 +157,7 @@
         "twoplus",
         null,
       ];
+
       let demoScale = d3
         .scaleOrdinal()
         .domain(races)
@@ -231,15 +184,15 @@
       showDemoButton.attr("clicked", false).on("click", showDemographics);
 
       //create filters for hate crime types
-      var hateCrimeTypes = [];
-      hateCrimes.forEach((row, i) => {
-        let type = row["Bias Motive Description"];
-        if (!hateCrimeTypes.includes(type)) {
-          hateCrimeTypes.push(type);
-        }
-      });
-      hateCrimeTypes.sort();
-      console.log(hateCrimeTypes);
+      var hateCrimeTypes = ['ANTI-ASIAN', 'ANTI-BLACK', 'ANTI-WHITE', 'ANTI-HISPANIC', 'ANTI-OTHER ETHNICITY', 'ANTI-MULTI-RACIAL GROUPS'];
+      // hateCrimes.forEach((row, i) => {
+      //   let type = row["Bias Motive Description"];
+      //   if (!hateCrimeTypes.includes(type)) {
+      //     hateCrimeTypes.push(type);
+      //   }
+      // });
+      // hateCrimeTypes.sort();
+      // console.log(hateCrimeTypes);
       // hateCrimeTypes.pop(null);
 
       // create filters
@@ -249,11 +202,11 @@
         .attr("id", "type")
         .attr("class", "filter");
 
-      let updateButton = filters
-        .append("button")
-        .attr("id", "update")
-        .text("Update")
-        .on("click", updateFiltered);
+      // let updateButton = filters
+      //   .append("button")
+      //   .attr("id", "update")
+      //   .text("Update")
+      //   .on("click", updateFiltered);
 
       let clearButton = filters
         .append("button")
@@ -263,14 +216,19 @@
 
       hateCrimeTypes.forEach((d) => {
         crimeFilter
-          .append("input")
+          // .append("input")
+          .append("button")
           .attr("name", d)
-          .attr("type", "checkbox")
+          // .attr("type", "checkbox")
           .attr("class", "type")
-          .attr("param", "Bias Motive Description");
+          .attr("param", "Bias Motive Description")
+          .text(d)
+          .on("click", updateFiltered);
 
-        crimeFilter.append("label").attr("for", d).text(d);
+        // crimeFilter.append("label").attr("for", d).text(d);
       });
+
+      //create time slider
 
       let timeSliderHeight = 300;
       let timeSliderWidth = 1000;
@@ -378,87 +336,9 @@
         .attr("fill", "black")
         .text("No selected precincts");
 
-      // let clickmesh = map.append("path").attr("class", "mouseover outline").attr("d", "");
-
       let filteredHateCrimes = hateCrimes;
       let selectedPrecincts = [];
       let selectedHateCrimes = hateCrimes;
-
-      //line graph scales
-      // const crimeExtent = d3.extent(data, (d) => d["precinctstuff"]);
-      // const crimeScale = d3
-      //   .scaleLinear()
-      //   .domain(crimeExtent)
-      //   .range([line_chartHeight, 0]);
-      //
-      // const dateExtent = d3.extent(data, (d) => d["date"]);
-      // const dateScale = d3
-      //   .scaleTime()
-      //   .domain(dateExtent)
-      //   .range([0, chartWidth]);
-      // // Y axis
-      // let leftAxis = d3.axisLeft(crimeScale);
-      // let leftGridlines = d3
-      //   .axisLeft(crimeScale)
-      //   .tickSize(-chartWidth - 10)
-      //   .tickFormat("");
-      // annotations
-      //   .append("g")
-      //   .attr("class", "y axis")
-      //   .attr(
-      //     "transform",
-      //     `translate(${linemargin.left - 10},${linemargin.top})`
-      //   )
-      //   .call(leftAxis);
-      // annotations
-      //   .append("g")
-      //   .attr("class", "y gridlines")
-      //   .attr(
-      //     "transform",
-      //     `translate(${linemargin.left - 10},${linemargin.top})`
-      //   )
-      //   .call(leftGridlines);
-      // // X axis
-      // let bottomAxis = d3.axisBottom(dateScale);
-      // let bottomGridlines = d3
-      //   .axisBottom(dateScale)
-      //   .tickSize(-line_chartHeight - 10)
-      //   .tickFormat("");
-      // annotations
-      //   .append("g")
-      //   .attr("class", "x axis")
-      //   .attr(
-      //     "transform",
-      //     `translate(${linemargin.left},${
-      //       line_chartHeight + linemargin.top + 10
-      //     })`
-      //   )
-      //   .call(bottomAxis);
-      // annotations
-      //   .append("g")
-      //   .attr("class", "x gridlines")
-      //   .attr(
-      //     "transform",
-      //     `translate(${linemargin.left},${
-      //       line_chartHeight + linemargin.top + 10
-      //     })`
-      //   )
-      //   .call(bottomGridlines);
-      // var lineGen = d3
-      //   .line()
-      //   .x((d) => dateScale(d["date"]))
-      //   .y((d) => crimeScale(d["frequncy of crimes"]))
-      //   .curve(d3.curveMonotoneX); // this configures whether straight lines connect your data points
-      // //  or if it blends between points using a curve; see d3.line docs
-      // //final graph
-      // chartArea
-      //   .append("path")
-      //   .datum(data)
-      //   .attr("class", "line")
-      //   .attr("fill", "none")
-      //   .attr("stroke", "steelblue")
-      //   .attr("stroke-width", 3)
-      //   .attr("d", lineGen);
 
       function getCDNum(s, boro) {
         i1 = s.indexOf("District") + 9;
@@ -535,16 +415,16 @@
       }
 
       function clearFilters() {
-        filters.selectAll(".type").each(function () {
-          d3.select(this).property("checked", false);
-        });
+        // filters.selectAll(".type").each(function () {
+        //   d3.select(this).property("checked", false);
+        // });
 
-        selectedPrecincts.forEach((precinctNumber) => {
-          d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
-            d3.select(this).attr("stroke-width", "1");
-          });
-        });
-        selectedPrecincts = [];
+        // selectedPrecincts.forEach((precinctNumber) => {
+        //   d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
+        //     d3.select(this).attr("stroke-width", "1");
+        //   });
+        // });
+        // selectedPrecincts = [];
 
         filteredHateCrimes = hateCrimes;
         updatePrecincts();
@@ -552,40 +432,42 @@
 
       //update precincts based on filtered data
       function updateFiltered() {
-        let checkedFilters = [];
-        //get filtered data
-        filters.selectAll(".type").each(function () {
-          let filter = d3.select(this);
-          let checked = filter.property("checked");
-          if (checked) {
-            checkedFilters.push(filter);
-          }
-        });
+        // let checkedFilters = [];
+        // //get filtered data
+        // filters.selectAll(".type").each(function () {
+        //   let filter = d3.select(this);
+        //   let checked = filter.property("checked");
+        //   if (checked) {
+        //     checkedFilters.push(filter);
+        //   }
+        // });
 
-        if (checkedFilters.length === 0) {
-          filteredHateCrimes = hateCrimes;
-        } else {
+        // if (checkedFilters.length === 0) {
+        //   filteredHateCrimes = hateCrimes;
+        // } else {
           filteredHateCrimes = hateCrimes.filter((d) => {
-            let include = false;
+            // let include = false;
 
             //check satisfies hate crime type filters
-            checkedFilters.forEach((fil) => {
+            // checkedFilters.forEach((fil) => {
               // console.log(fil);
-              let key = fil.attr("param");
-              let val = fil.attr("name");
-              if (d[key] === val) {
-                include = true;
-              }
-            });
+            let fil = d3.select(this);
+            let key = fil.attr("param");
+            let val = fil.attr("name");
+            // if (d[key] === val) {
+            //   include = true;
+            // }
+            // });
 
-            return include;
+            // return include;
+            return (d[key] === val);
           });
 
           //update legend
           drawLegend(colorLegend, colorScale);
           //put code updating here, assume dataset is filteredhatecrimes
           displayBar();
-        }
+        // }
 
         console.log(filteredHateCrimes);
 
@@ -675,7 +557,9 @@
         filteredHateCrimes.forEach((d) => {
           // console.log(d["Bias Motive Description"]);
           // console.log(hateCrimeCount[d["Bias Motive Description"]]);
-          hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
+          if (hateCrimeTypes.includes(d["Bias Motive Description"])) {
+            hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
+          }
         });
         console.log(hateCrimeCount["number"]);
         var hateCountList = Object.values(hateCrimeCount);
