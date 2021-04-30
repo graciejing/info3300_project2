@@ -22,9 +22,10 @@
       width="600"
       style="background: #fff; margin-top: 30px"
     ></svg>
-    <svg id="map" width="1000" height="800"></svg>
+    <svg id="map" width="400" height="300"></svg>
+    <svg id="bar" width="1400" height="400"></svg>
     <svg id="linegraph" width="1000" height="800"></svg>
-    <svg id="bar" width="1000" height="800"></svg>
+
     <script>
       //create cloropleth
       const svg = d3.select("svg#map");
@@ -427,9 +428,8 @@
           });
 
           if (checkedFilters.length === 0) {
-            filteredHateCrimes = hateCrimes
-          }
-          else {
+            filteredHateCrimes = hateCrimes;
+          } else {
             filteredHateCrimes = hateCrimes.filter((d) => {
               let include = false;
 
@@ -484,12 +484,45 @@
           //update legend
           drawLegend(colorLegend, colorScale);
           //put code updating here, assume dataset is filteredhatecrimes
-          // displayBar();
+          displayBar();
         }
 
         //creates a new dataset of only stuff from that precinct
         //use filterdhatecrimes+ hatecrimetypes
         //white {type: white number: 20}, black {type: white number: 20}
+        function wrap(text, width) {
+          text.each(function () {
+            var text = d3.select(this),
+              words = text.text().split(/\s+/).reverse(),
+              word,
+              line = [],
+              lineNumber = 0,
+              lineHeight = 1.1, // ems
+              y = text.attr("y"),
+              dy = parseFloat(text.attr("dy")),
+              tspan = text
+                .text(null)
+                .append("tspan")
+                .attr("x", 0)
+                .attr("y", y)
+                .attr("dy", dy + "em");
+            while ((word = words.pop())) {
+              line.push(word);
+              tspan.text(line.join(" "));
+              if (tspan.node().getComputedTextLength() > width) {
+                line.pop();
+                tspan.text(line.join(" "));
+                line = [word];
+                tspan = text
+                  .append("tspan")
+                  .attr("x", 0)
+                  .attr("y", y)
+                  .attr("dy", ++lineNumber * lineHeight + dy + "em")
+                  .text(word);
+              }
+            }
+          });
+        }
         function displayBar() {
           // console.log("hi");
           hateCrimeCount = {};
@@ -500,31 +533,14 @@
           // console.log(hateCrimeCount);
 
           filteredHateCrimes.forEach((d) => {
-            console.log(d["Bias Motive Description"]);
-            console.log(hateCrimeCount[d["Bias Motive Description"]]);
+            // console.log(d["Bias Motive Description"]);
+            // console.log(hateCrimeCount[d["Bias Motive Description"]]);
             hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
           });
-
-          console.log(hateCrimeCount);
-
-          // for (var a = 0; a < hateCrimeTypes.length; a++) {
-          //   filteredHateCrimes.forEach((d) => {
-          //     if (d["Bias Motive Description"].includes(hateCrimeTypes[a])) {
-          //       //builds the first "type: hatecrimetype"
-          //       hateCrimeCount["type"] = hateCrimeTypes[a];
-          //       //tabulates and builds the "number:hatecrime", goes through thewholelistpertype
-          //       for (var i = 0; i < d.length; i++) {
-          //         total = 0;
-          //         if ((d[i]["Bias Motive Description"] = hateCrimeTypes[a])) {
-          //           total += 1;
-          //           hateCrimeCount["number"] = total;
-          //         }
-          //       }
-          //     }
-          // });
-          // }
-          console.log(hateCrimeCount);
-          console.log("hi");
+          console.log(hateCrimeCount["number"]);
+          var hateCountList = Object.values(hateCrimeCount);
+          var dictLength = Object.values(hateCrimeCount).length;
+          console.log(hateCountList);
           let bar = d3.select("svg#bar");
           var margin = { top: 30, right: 30, bottom: 90, left: 70 };
           let width = bar.attr("width");
@@ -554,20 +570,17 @@
                 (chartHeight + margin.top) +
                 ")"
             )
-            .call(d3.axisBottom(x).tickSizeOuter(0));
-          const totalExtent = d3.extent(
-            hateCrimeCount,
-            (d) => d["Bias Motive Description"]
-          );
-          console.log("hii");
-          console.log(totalExtent);
+            .call(d3.axisBottom(xScale).tickSizeOuter(0));
+          const totalExtent = d3.extent(hateCountList, (d) => d["number"]);
+          // console.log(hateCrimeCount["number"]);
+          // console.log(totalExtent);
           var yScale = d3
             .scaleLinear()
             .domain([0, totalExtent[1]])
             .range([chartHeight, 0]);
-          let leftAxis = d3.axisLeft(y);
+          let leftAxis = d3.axisLeft(yScale);
           let leftGridlines = d3
-            .axisLeft(y)
+            .axisLeft(yScale)
             .tickSize(-chartWidth - 10)
             .tickFormat("");
           annotations
@@ -591,7 +604,7 @@
             .domain(hateCrimeTypes);
           chartArea
             .selectAll("rect.bar")
-            .data(hateCrimeCounts)
+            .data(hateCountList)
             .join("rect")
             .attr("class", "bar")
             .attr("fill", "steelblue")
