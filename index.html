@@ -16,7 +16,7 @@
     <button id="demographic">Show Demographic Overlay</button>
     <svg id="map" width="1000" height="800"></svg>
     <svg id="linegraph" width="1000" height="800"></svg>
-
+    <svg id="bar" width="1000" height="800"></svg>
     <script>
       const svg = d3.select("svg#map");
       const linegraph = d3.select("svg#linegraph");
@@ -119,7 +119,6 @@
 
         console.log(hateCrimes);
         console.log(precincts);
-        console.log("hi");
         console.log(demographics);
         console.log(communities);
 
@@ -199,8 +198,12 @@
         }
         //get top three values
         function getTopThree(d) {
+          console.log(selectedPrecincts);
+          console.log(demographics);
           n = demographics.filter((demo) => {
-            return demo.boro_cd.includes(d.properties["boro_cd"]);
+            return demo.boro_cd.includes(
+              (d.properties["boro_cd"] = selectedPrecincts)
+            );
           });
           if (n.length === 0) {
             return null;
@@ -230,14 +233,109 @@
               thirdpop = r;
             }
           });
-          topThree.push(firstpop);
-          topThree.push(secondpop);
-          topThree.push(thirdpop);
-
+          topThree.push(pop1);
+          topThree.push(pop2);
+          topThree.push(pop3);
           return topThree;
         }
+
         //creates a new dataset of only stuff from that precinct
-        function filterPrecincts() {}
+        function displayBar() {
+          filteredHateCrimes.forEach((d) => {
+            hateCrimeCount[d["Bias Motive Description"]] += 1;
+          });
+          console.log(hateCrimeCount);
+          console.log("hi");
+          let bar = d3.select("svg#bar");
+          var margin = { top: 30, right: 30, bottom: 90, left: 70 };
+          let width = svg.attr("width");
+          let height = svg.attr("height");
+          const chartWidth = width - margin.left - margin.right;
+          const chartHeight = height - margin.top - margin.bottom;
+          let annotations = svg.append("g").attr("id", "annotations1");
+          var chartArea = svg
+            .append("g")
+            .attr("id", "points")
+            .attr(
+              "transform",
+              "translate(" + margin.left + "," + margin.top + ")"
+            );
+          var x = d3
+            .scaleBand()
+            .domain(hateCrimeTypes)
+            .range([0, chartWidth])
+            .padding([0.2]);
+          svg
+            .append("g")
+            .attr(
+              "transform",
+              "translate(" +
+                margin.left +
+                "," +
+                (chartHeight + margin.top) +
+                ")"
+            )
+            .call(d3.axisBottom(x).tickSizeOuter(0));
+          const totalExtent = d3.extent(
+            hateCrimeCount,
+            (d) => d["Bias Motive Description"]
+          );
+          console.log(totalExtent);
+          var y = d3
+            .scaleLinear()
+            .domain([0, totalExtent[1]])
+            .range([chartHeight, 0]);
+          let leftAxis = d3.axisLeft(y);
+          let leftGridlines = d3
+            .axisLeft(y)
+            .tickSize(-chartWidth - 10)
+            .tickFormat("");
+          annotations
+            .append("g")
+            .attr("class", "y axis")
+            .attr(
+              "transform",
+              "translate(" + (margin.left - 10) + "," + margin.top + ")"
+            )
+            .call(leftAxis);
+          annotations
+            .append("g")
+            .attr("class", "y gridlines")
+            .attr(
+              "transform",
+              "translate(" + (margin.left - 10) + "," + margin.top + ")"
+            )
+            .call(leftGridlines);
+          var color = d3
+            .scaleOrdinal(d3.schemeCategory10)
+            .domain(hateCrimeTypes);
+          chartArea
+            .append("g")
+            .selectAll("g")
+            //appendthe correctbars
+            .data(stackedData)
+            .enter()
+            .append("g")
+            .attr("fill", function (d) {
+              return color(d.key);
+            })
+            .selectAll("rect")
+            .data(function (d) {
+              return d;
+            })
+            .enter()
+            .append("rect")
+            .attr("x", function (d) {
+              return x(d.data.actor);
+            })
+            .attr("y", function (d) {
+              return y(d[1]);
+            })
+            .attr("height", function (d) {
+              return y(d[0]) - y(d[1]);
+            })
+            .attr("width", x.bandwidth());
+        }
         //create button to show demographic overlay
         let showDemoButton = d3.select("button#demographic");
         showDemoButton.attr("clicked", false).on("click", showDemographics);
@@ -342,9 +440,11 @@
 
             selectedPrecincts.push(precinctNumber);
             txt.text(`Selected Precincts: ${selectedPrecincts}`);
+            displayBar(selectedPrecincts);
           }
 
           updateFiltered();
+
           // updatePrecincts();
         }
 
@@ -469,6 +569,7 @@
           precincts.features.forEach((d) => {
             precinctCrimeCount[d.properties.precinct] = 0;
           });
+          //tabulates hatecrimes
           filteredHateCrimes.forEach((d) => {
             precinctCrimeCount[d.precinct] += 1;
           });
@@ -492,6 +593,8 @@
               return colorScale(count);
             }
           });
+          //put code updating here, assume dataset is filteredhatecrimes
+          displayBar();
         }
 
         updatePrecincts();
