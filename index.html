@@ -2,7 +2,18 @@
 <html>
   <head>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <style></style>
+    <script src="https://d3js.org/topojson.v2.min.js"></script>
+    <style>
+      .outline {
+        stroke: black;
+        stroke-width: 1px;
+        fill: none;
+      }
+
+      .mouseover {
+        stroke-width: 3px;
+      }
+    </style>
   </head>
 
   <body>
@@ -14,6 +25,8 @@
       <h4>Details:</h4>
     </div>
     <button id="demographic">Show Demographic Overlay</button>
+    <div id="legend"></div>
+    <svg id="colorLegend" height="100" width="600" style="background: #fff; margin-top:30px"></svg>
     <svg id="map" width="1000" height="800"></svg>
     <svg id="linegraph" width="1000" height="800"></svg>
 
@@ -47,7 +60,7 @@
         let precincts = await d3.json("Police_Precincts.geojson");
         // console.log(precincts)
 
-        let communities = await d3.json("Community Districts.geojson");
+        let communities= await d3.json("Community Districts.geojson");
 
         // a CSV dataset of demographics of NYC
         let demographics = await d3.csv("demo_2018_acs5yr_puma.csv");
@@ -92,9 +105,7 @@
           d["Arrest Date"] = timeParser(d["Arrest Date"]);
           d["Record Create Date"] = timeParser(d["Record Create Date"]);
           d["precinct"] = d["Complaint Precinct Code"];
-          // d["borough"] = countyToBorough[d.County];
         });
-        // console.log(hateCrimes);
 
         // clean up demographic data
         demographics.pop();
@@ -130,6 +141,8 @@
 
         let filteredHateCrimes = hateCrimes;
 
+        let colorScale = d3.scaleQuantile()
+
         //create map for precincts
         var precinctProjection = d3.geoMercator().fitSize([mapWidth, mapHeight], precincts);
         var precinctPath = d3.geoPath().projection(precinctProjection);
@@ -141,6 +154,7 @@
            .attr("stroke-width", 1)
            .attr("d", precinctPath)
            .on("click", updateSelected);
+
 
         let races = ['asian','black','hispanic','white','native','hawaiianpi', 'other', 'twoplus', null];
         let demoScale = d3.scaleOrdinal()
@@ -168,8 +182,6 @@
           if (n.length === 0) {
             return null;
           }
-          // console.log(d);
-          // console.log(n);
           maxPop = 0
           domPop = null
           races.forEach(r => {
@@ -229,7 +241,7 @@
           .append("button")
           .attr("id", "update")
           .text("Update")
-          .on("click", updatePrecincts);
+          .on("click", updateFiltered);
 
         let clearButton = filters
           .append("button")
@@ -248,6 +260,20 @@
           crimeFilter.append("label").attr("for", d).text(d);
         });
 
+        //creating legends
+        let demoLegend = d3.select("#legend").append("g").attr("id", "demoLegend")
+        races.forEach(r => {
+            demoLegend.append("span")
+                      .text(r)
+                      .style("color", demoScale(r))
+        });
+        demoLegend.append("span").text("no demographic data").style("color", demoScale(null));
+
+        let colorLegend = d3.select("#colorLegend")
+        colorLegend.append("g")
+          .attr("class", "colorbar axis")
+        // drawLegend(colorLegend, colorScale)
+
         //adding details for precinct on click
         let details = d3.select("#details")
                         .append("text")
@@ -257,18 +283,20 @@
                         .attr("fill", "black")
                         .text("No selected precincts");
 
+        let clickmesh = map.append("path").attr("class", "mouseover outline").attr("d", "");
+
         let selectedPrecincts = [];
 
         function updateSelected() {
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
-          console.log(precinctNumber);
+
 
           let txt = d3.select("text#precinct");
-          console.log(selectedPrecincts);
+
           // if (selected === precinctNumber) {
+          // already selected
           if (selectedPrecincts.includes(precinctNumber)) {
-            console.log('here')
             d3.selectAll(`path.p${precinctNumber}`).each(function() {
               d3.select(this).attr("stroke-width", "1");
             });
@@ -279,8 +307,10 @@
             else {
               txt.text(`Selected Precincts: ${selectedPrecincts}`);
             }
+            clickmesh.attr("d", "");
 
           }
+          // hasn't been selected
           else {
             d3.selectAll(`path.p${precinctNumber}`).each(function() {
               d3.select(this).attr("stroke-width", "3");
@@ -290,7 +320,7 @@
             txt.text(`Selected Precincts: ${selectedPrecincts}`);
           }
 
-          updateFiltered();
+          // updateFiltered();
           // updatePrecincts();
 
         }
@@ -306,6 +336,8 @@
             });
           })
           selectedPrecincts = [];
+
+          filteredHateCrimes = hateCrimes;
           updatePrecincts();
         }
         //line graph scales
@@ -398,15 +430,15 @@
           });
 
           filteredHateCrimes = hateCrimes.filter(d => {
-            let include = true;
+            let include = false;
 
             //check satisfies hate crime type filters
             checkedFilters.forEach(fil => {
               // console.log(fil);
               let key = fil.attr("param");
               let val = fil.attr("name");
-              if (d[key] !== val) {
-                include = false;
+              if (d[key] === val) {
+                include = true;
               }
             });
 
@@ -414,6 +446,11 @@
           });
           console.log(filteredHateCrimes);
 
+          updatePrecincts()
+        }
+
+        function updatePrecincts() {
+          // updateFiltered();
           precincts.features.forEach((d) => {
             precinctCrimeCount[d.properties.precinct] = 0;
           });
@@ -421,35 +458,86 @@
             precinctCrimeCount[d.precinct] += 1;
           });
 
-        }
-
-        function updatePrecincts() {
-          updateFiltered();
-
           //need to figure out colorScale
-          let colorScale = d3
-            .scaleQuantile()
-            .domain(Object.values(precinctCrimeCount))
-            .range(d3.schemeGreys[5]);
+          //update color scale
+          colorScale.domain(Object.values(precinctCrimeCount)).range(d3.schemeGreys[5]);
 
           //color precincts
           map.selectAll(".precinct")
              .style("fill", d => {
                count = precinctCrimeCount[d.properties.precinct];
                if (count === 0) {
-                 return "lightgrey"
+                 return colorScale.range()[0];
                }
                else {
                  return colorScale(count);
                }
              });
 
+          //update legend
+          drawLegend(colorLegend,colorScale);
         }
+
 
         updatePrecincts();
       };
 
       requestData();
+
+      // MODIFIED CODE FROM 3/22 LECTURE TO DRAW LEGEND
+      // Function needs a d3 selected SVG canvas where it will draw the legend and a source color scale
+      function drawLegend(legend, legendColorScale) {
+
+        // Bonus code here to draw an adaptive gradient legend so we can see different color scales for choropleth maps
+        //  Credit Prof. Rz if you are basing a legend on this structure, and note SERIOUS PERFORMANCE CONSIDERATIONS
+
+        //const legend = d3.select("#colorLegend");
+        const legendWidth = legend.attr("width");
+        const legendHeight = legend.attr("height");
+        const legendMinMax = d3.extent(legendColorScale.domain()); // way to recover the minMax from most kinds of scales
+        const barHeight = 60;
+        const stepSize = 4; // warning, not using a canvas element so lots of rect tags will be created for low stepSize, causing issues with performance
+        // Extend the minmax by 1 in either direction to expose more features
+        const pixelScale = d3.scaleLinear().domain([0,legendWidth-40]).range([legendMinMax[0]-1,legendMinMax[1]+1]); // In this case the "data" are pixels, and we get numbers to use in colorScale
+        const barScale = d3.scaleLinear().domain([legendMinMax[0]-1,legendMinMax[1]+1]).range([0,legendWidth-40]);
+        const barAxis = d3.axisBottom(barScale);
+        // Check if we're using a quantile scale - if so, we can do better
+        if (legendColorScale.hasOwnProperty('quantiles')) {
+          // Use the quantile breakpoints plus the min and max of the scale as tick values
+          barAxis.tickValues(legendColorScale.quantiles().concat( legendMinMax ));
+        }
+        legend.select(".colorbar, .axis")
+          .attr("transform","translate("+(20)+","+(barHeight+5)+")")
+          .call(barAxis)
+          // .call(barAxis);
+
+        // Draw rects of color down the bar
+        let bar = legend.append("g").attr("transform","translate("+(20)+","+(0)+")")
+        for (let i=0; i<legendWidth-40; i=i+stepSize) {
+          bar.append("rect")
+            .attr("x", i)
+            .attr("y", 0)
+            .attr("width", stepSize)
+            .attr("height",barHeight)
+            .style("fill", legendColorScale( pixelScale(i) )); // pixels => countData => color
+        }
+        // Put lines in to mark actual min and max of our data
+        bar.append("line").attr("stroke","white").attr("stroke-width",3).attr("x1", barScale(legendMinMax[0])).attr("x2", barScale(legendMinMax[0])).attr("y1", 0).attr("y1", barHeight+4);
+        bar.append("line").attr("stroke","white").attr("stroke-width",3).attr("x1", barScale(legendMinMax[1])).attr("x2", barScale(legendMinMax[1])).attr("y1", 0).attr("y1", barHeight+4);
+
+      }
+
+      //function to update the legend
+      function updateLegend(legend, legendColorScale) {
+        const barAxis = d3.axisBottom(barScale);
+        // Check if we're using a quantile scale - if so, we can do better
+        if (legendColorScale.hasOwnProperty('quantiles')) {
+          // Use the quantile breakpoints plus the min and max of the scale as tick values
+          barAxis.tickValues(legendColorScale.quantiles().concat( legendMinMax ));
+        }
+        legend.select(".colorbar, .axis").call(barAxis)
+      }
+
     </script>
   </body>
 </html>
