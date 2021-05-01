@@ -229,6 +229,7 @@
         crimeFilter.append("label").attr("for", d).text(d);
       });
 
+
       let timeSliderHeight = 300;
       let timeSliderWidth = 1000;
 
@@ -246,7 +247,7 @@
 
       let areaLayer = canvas.append("g").attr("class", "areaLayer");
       canvas.append("g")
-        .attr("transform", `translate(0, ${timeSliderHeight})`)
+        .attr("transform", `translate(0, ${timeSliderHeight + 10})`)
         .attr('class', "x-axis")
         .call(xAxis);
 
@@ -255,6 +256,11 @@
         .thresholds(numBins);
 
       let counts = histoGen(values);
+
+      let time_spacing = counts[1].x1 - counts[1].x0;
+
+      counts[0].x0 = counts[0].x1 - time_spacing;
+      counts[counts.length - 1].x1 = counts[counts.length - 1].x0 + time_spacing;
 
       counts.unshift({
         x0: 0,
@@ -270,7 +276,7 @@
         .range([timeSliderHeight, 4]);
 
       let area = d3.area().x(d => xScale(d.x1))
-        .y0(yScale(0))
+        .y0(yScale(0) + 10)
         .y1(d => yScale(d.length))
         .curve(d3.curveNatural);
 
