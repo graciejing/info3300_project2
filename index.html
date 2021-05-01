@@ -221,7 +221,7 @@
         .append("button")
         .attr("id", "clear")
         .text("Clear")
-        .on("click", clearFilters);
+        .on("click", clear);
 
       hateCrimeTypes.forEach((d) => {
         crimeFilter
@@ -417,8 +417,14 @@
       }
 
       function updateDetails() {
+        let txt = d3.select("text#precinct");
+        let ttl = details.select("text#total")
         if (selectedPrecinct === null) {
+
           selectedHateCrimes = filteredHateCrimes;
+          
+          txt.text("No selected precinct");
+          ttl.text(`Total Number of Hate Crimes: ${selectedHateCrimes.length}`)
         }
         else {
           console.log("here")
@@ -428,7 +434,7 @@
 
           console.log(selectedHateCrimes)
           // console.log(`${selectedHateCrimes}`)
-          let ttl = details.select("text#total")
+
           ttl.text(`Total Number of Hate Crimes: ${selectedHateCrimes.length}`)
 
         }
@@ -468,19 +474,25 @@
         //    .attr("stroke-width", 0)
       }
 
-      function clearFilters() {
+      function clear() {
         // filters.selectAll(".type").each(function () {
         //   d3.select(this).property("checked", false);
         // });
 
         // selectedPrecincts.forEach((precinctNumber) => {
-        //   d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
-        //     d3.select(this).attr("stroke-width", "1");
-        //   });
+        d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
+          d3.select(this).attr("stroke-width", "1");
+        });
+
+        d3.selectAll()
         // });
         // selectedPrecincts = [];
 
         filteredHateCrimes = hateCrimes;
+        selectedHateCrimes = hateCrimes;
+        filteredType = null;
+        selectedPrecinct = null;
+        updateDetails();
         updatePrecincts();
       }
 
@@ -520,7 +532,7 @@
           // return (d[key] === val);
 
         console.log(filteredHateCrimes);
-
+        updateDetails();
         updatePrecincts();
       }
 
