@@ -269,15 +269,6 @@
         "ANTI-OTHER ETHNICITY",
         "ANTI-MULTI-RACIAL GROUPS",
       ];
-      // hateCrimes.forEach((row, i) => {
-      //   let type = row["Bias Motive Description"];
-      //   if (!hateCrimeTypes.includes(type)) {
-      //     hateCrimeTypes.push(type);
-      //   }
-      // });
-      // hateCrimeTypes.sort();
-      // console.log(hateCrimeTypes);
-      // hateCrimeTypes.pop(null);
 
       const demoToCrime = {
         asian: "ANTI-ASIAN",
@@ -489,14 +480,11 @@
           d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
             d3.select(this).attr("stroke-width", 1);
           });
-          // selectedPrecincts = selectedPrecincts.filter(
-          //   (d) => d !== precinctNumber
-          // );
+
           selectedPrecinct = null;
-          // if (selectedPrecincts === []) {
+
           txt.text("No selected precinct");
-          // } else {
-          // txt.text(`Selected Precincts: ${selectedPrecincts}`);
+
         } else if (selectedPrecinct === null) {
           d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
             d3.select(this).attr("stroke-width", 3);
@@ -513,7 +501,6 @@
             d3.select(this).attr("stroke-width", 3);
           });
 
-          // selectedPrecincts.push(precinctNumber);
           selectedPrecinct = precinctNumber;
           txt.text(`Selected Precinct: ${selectedPrecinct}`);
         }
@@ -528,21 +515,13 @@
           selectedHateCrimes = filteredHateCrimes;
 
           txt.text("No selected precinct");
-          ttl.text(
-            `Total Number of Hate Crimes: ${selectedHateCrimes.length}`
-          );
+          ttl.text(`Total Number of Hate Crimes: ${selectedHateCrimes.length}`);
         } else {
-          console.log("here");
           selectedHateCrimes = filteredHateCrimes.filter((d) => {
             return d.precinct == selectedPrecinct;
           });
 
-          console.log(selectedHateCrimes);
-          // console.log(`${selectedHateCrimes}`)
-
-          ttl.text(
-            `Total Number of Hate Crimes: ${selectedHateCrimes.length}`
-          );
+          ttl.text(`Total Number of Hate Crimes: ${selectedHateCrimes.length}`);
         }
         displayBar();
       }
