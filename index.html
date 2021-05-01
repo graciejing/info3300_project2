@@ -109,7 +109,7 @@
         d.native = Number(d["AIANNHE"].replace(/,/g, ""));
         d.black = Number(d["BlNHE"].replace(/,/g, ""));
         // d.hawaiianpi =;
-        d.other = Number(d["OthNHE"].replace(/,/g, "")) +  Number(d["NHPINHE"].replace(/,/g, ""));
+        d.other = Number(d["OthNHE"].replace(/,/g, "")) + Number(d["NHPINHE"].replace(/,/g, ""));
         d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
         d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); //PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
       });
@@ -339,18 +339,18 @@
       let details = d3.select("#details");
 
       details.append("text")
-             .attr("id", "precinct")
-             .attr("x", 0)
-             .attr("y", 0)
-             .attr("fill", "black")
-             .text("No selected precincts");
+        .attr("id", "precinct")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("fill", "black")
+        .text("No selected precincts");
 
       details.append("text")
-             .attr("id", "total")
-             .attr("x", 0)
-             .attr("y", 0)
-             .attr("fill", "black")
-             .text("");
+        .attr("id", "total")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("fill", "black")
+        .text("");
 
       let filteredType = null;
       let filteredHateCrimes = hateCrimes;
@@ -389,8 +389,8 @@
           // if (selectedPrecincts === []) {
           txt.text("No selected precinct");
           // } else {
-            // txt.text(`Selected Precincts: ${selectedPrecincts}`);
-          }
+          // txt.text(`Selected Precincts: ${selectedPrecincts}`);
+        }
         else if (selectedPrecinct === null) {
           d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
             d3.select(this).attr("stroke-width", 3);
@@ -422,7 +422,7 @@
         if (selectedPrecinct === null) {
 
           selectedHateCrimes = filteredHateCrimes;
-          
+
           txt.text("No selected precinct");
           ttl.text(`Total Number of Hate Crimes: ${selectedHateCrimes.length}`)
         }
@@ -451,7 +451,7 @@
           showDemoButton.attr("clicked", false);
         } else {
           showDemoButton.text("Remove Demographic Overlay");
-          demoMap.selectAll("path.community").each(function(d) {
+          demoMap.selectAll("path.community").each(function (d) {
             if (filteredType === null) {
               d3.select(this).attr("visibility", "");
             }
@@ -460,11 +460,11 @@
             }
           });
 
-            // .attr("stroke-width", 0);
+          // .attr("stroke-width", 0);
           // d3.selectAll(".outline").raise()
           // .each(function () {
-            // console.log(d3.select(this));
-            // d3.select(this).raise();
+          // console.log(d3.select(this));
+          // d3.select(this).raise();
           // });
 
           showDemoButton.attr("clicked", true);
@@ -519,7 +519,7 @@
 
           //check satisfies hate crime type filters
           // checkedFilters.forEach((fil) => {
-            // console.log(fil);
+          // console.log(fil);
 
           let key = fil.attr("param");
           let val = fil.attr("name");
@@ -529,7 +529,7 @@
           return include;
         });
 
-          // return (d[key] === val);
+        // return (d[key] === val);
 
         console.log(filteredHateCrimes);
         updateDetails();
