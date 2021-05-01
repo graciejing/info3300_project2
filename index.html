@@ -108,8 +108,8 @@
         d.white = Number(d["WtNHE"].replace(/,/g, ""));
         d.native = Number(d["AIANNHE"].replace(/,/g, ""));
         d.black = Number(d["BlNHE"].replace(/,/g, ""));
-        d.hawaiianpi = Number(d["NHPINHE"].replace(/,/g, ""));
-        d.other = Number(d["OthNHE"].replace(/,/g, ""));
+        // d.hawaiianpi =;
+        d.other = Number(d["OthNHE"].replace(/,/g, "")) +  Number(d["NHPINHE"].replace(/,/g, ""));
         d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
         d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); //PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
       });
@@ -152,7 +152,7 @@
         "hispanic",
         "white",
         "native",
-        "hawaiianpi",
+        // "hawaiianpi",
         "other",
         "twoplus",
         null,
@@ -171,9 +171,9 @@
         .selectAll("path.community")
         .data(communities.features)
         .join("path")
-        .attr("class", "community") //d =>`zipcode z${d.properties.precinct}`)
-        .attr("stroke", "black")
-        .attr("stroke-width", 1)
+        .attr("class", "community")
+        // .attr("stroke", "black")
+        .attr("stroke-width", 0)
         .attr("d", demoPath)
         .attr("opacity", 0.5)
         .attr("fill", (d) => demoScale(getDomDemo(d)))
@@ -184,7 +184,7 @@
       showDemoButton.attr("clicked", false).on("click", showDemographics);
 
       //create filters for hate crime types
-      var hateCrimeTypes = ['ANTI-ASIAN', 'ANTI-BLACK', 'ANTI-WHITE', 'ANTI-HISPANIC', 'ANTI-OTHER ETHNICITY', 'ANTI-MULTI-RACIAL GROUPS'];
+      const hateCrimeTypes = ['ANTI-ASIAN', 'ANTI-BLACK', 'ANTI-WHITE', 'ANTI-HISPANIC', 'ANTI-OTHER ETHNICITY', 'ANTI-MULTI-RACIAL GROUPS'];
       // hateCrimes.forEach((row, i) => {
       //   let type = row["Bias Motive Description"];
       //   if (!hateCrimeTypes.includes(type)) {
@@ -194,6 +194,15 @@
       // hateCrimeTypes.sort();
       // console.log(hateCrimeTypes);
       // hateCrimeTypes.pop(null);
+
+      const demoToCrime = {
+        'asian': 'ANTI-ASIAN',
+        'black': 'ANTI-BLACK',
+        'white': 'ANTI-WHITE',
+        'hispanic': 'ANTI-HISPANIC',
+        'other': 'ANTI-OTHER ETHNICITY',
+        'twoplus': 'ANTI-MULTI-RACIAL GROUPS'
+      }
 
       // create filters
       let filters = d3.select("#filters");
@@ -327,17 +336,25 @@
       // drawLegend(colorLegend, colorScale)
 
       //adding details for precinct on click
-      let details = d3
-        .select("#details")
-        .append("text")
-        .attr("id", "precinct")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("fill", "black")
-        .text("No selected precincts");
+      let details = d3.select("#details");
 
+      details.append("text")
+             .attr("id", "precinct")
+             .attr("x", 0)
+             .attr("y", 0)
+             .attr("fill", "black")
+             .text("No selected precincts");
+
+      details.append("text")
+             .attr("id", "total")
+             .attr("x", 0)
+             .attr("y", 0)
+             .attr("fill", "black")
+             .text("");
+
+      let filteredType = null;
       let filteredHateCrimes = hateCrimes;
-      let selectedPrecincts = [];
+      let selectedPrecinct = null;
       let selectedHateCrimes = hateCrimes;
 
       function getCDNum(s, boro) {
@@ -361,34 +378,64 @@
         let txt = d3.select("text#precinct");
 
         // already selected
-        if (selectedPrecincts.includes(precinctNumber)) {
+        if (selectedPrecinct === precinctNumber) {
           d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
             d3.select(this).attr("stroke-width", 1);
           });
-          selectedPrecincts = selectedPrecincts.filter(
-            (d) => d !== precinctNumber
-          );
-          if (selectedPrecincts === []) {
-            txt.text("No selected precincts");
-          } else {
-            txt.text(`Selected Precincts: ${selectedPrecincts}`);
+          // selectedPrecincts = selectedPrecincts.filter(
+          //   (d) => d !== precinctNumber
+          // );
+          selectedPrecinct = null;
+          // if (selectedPrecincts === []) {
+          txt.text("No selected precinct");
+          // } else {
+            // txt.text(`Selected Precincts: ${selectedPrecincts}`);
           }
-        } else {
-          // console.log(d3.selectAll(`.outline.p${precinctNumber}`))
+        else if (selectedPrecinct === null) {
           d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
-            // console.log(d3.select(this))
             d3.select(this).attr("stroke-width", 3);
-            // console.log(d3.select(this))
           });
 
-          selectedPrecincts.push(precinctNumber);
-          txt.text(`Selected Precincts: ${selectedPrecincts}`);
+          selectedPrecinct = precinctNumber;
+          txt.text(`Selected Precinct: ${selectedPrecinct}`);
+
+        } else {
+          d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
+            d3.select(this).attr("stroke-width", 1);
+          });
+
+          d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
+            d3.select(this).attr("stroke-width", 3);
+          });
+
+          // selectedPrecincts.push(precinctNumber);
+          selectedPrecinct = precinctNumber
+          txt.text(`Selected Precinct: ${selectedPrecinct}`);
         }
 
-        // updateFiltered();
-        // updatePrecincts();
+        updateDetails()
+      }
 
-        // updatePrecincts();
+      function updateDetails() {
+        if (selectedPrecinct === null) {
+          selectedHateCrimes = filteredHateCrimes;
+        }
+        else {
+          console.log("here")
+          selectedHateCrimes = filteredHateCrimes.filter(d => {
+            return (d.precinct == selectedPrecinct)
+          })
+
+          console.log(selectedHateCrimes)
+          // console.log(`${selectedHateCrimes}`)
+          let ttl = details.select("text#total")
+          ttl.text(`Total Number of Hate Crimes: ${selectedHateCrimes.length}`)
+
+        }
+        displayBar();
+
+
+
       }
 
       function showDemographics() {
@@ -398,15 +445,22 @@
           showDemoButton.attr("clicked", false);
         } else {
           showDemoButton.text("Remove Demographic Overlay");
-          demoMap
-            .selectAll("path.community")
-            .attr("visibility", "")
-            .attr("stroke-width", 0);
-          d3.selectAll(".outline").each(function () {
-            console.log(d3.select(this));
-            d3.select(this).raise();
+          demoMap.selectAll("path.community").each(function(d) {
+            if (filteredType === null) {
+              d3.select(this).attr("visibility", "");
+            }
+            else if (demoToCrime[getDomDemo(d)] === filteredType) {
+              d3.select(this).attr("visibility", "");
+            }
           });
-          // console.log(precinctAreas.selectAll(".outline"))
+
+            // .attr("stroke-width", 0);
+          // d3.selectAll(".outline").raise()
+          // .each(function () {
+            // console.log(d3.select(this));
+            // d3.select(this).raise();
+          // });
+
           showDemoButton.attr("clicked", true);
         }
 
@@ -445,29 +499,25 @@
         // if (checkedFilters.length === 0) {
         //   filteredHateCrimes = hateCrimes;
         // } else {
-          filteredHateCrimes = hateCrimes.filter((d) => {
-            // let include = false;
+        let fil = d3.select(this);
+        filteredType = fil.attr("name")
+        console.log(filteredType)
+        filteredHateCrimes = hateCrimes.filter((d) => {
+          let include = false;
 
-            //check satisfies hate crime type filters
-            // checkedFilters.forEach((fil) => {
-              // console.log(fil);
-            let fil = d3.select(this);
-            let key = fil.attr("param");
-            let val = fil.attr("name");
-            // if (d[key] === val) {
-            //   include = true;
-            // }
-            // });
+          //check satisfies hate crime type filters
+          // checkedFilters.forEach((fil) => {
+            // console.log(fil);
 
-            // return include;
-            return (d[key] === val);
-          });
+          let key = fil.attr("param");
+          let val = fil.attr("name");
+          if (d[key] === val) {
+            include = true;
+          }
+          return include;
+        });
 
-          //update legend
-          drawLegend(colorLegend, colorScale);
-          //put code updating here, assume dataset is filteredhatecrimes
-          displayBar();
-        // }
+          // return (d[key] === val);
 
         console.log(filteredHateCrimes);
 
@@ -554,7 +604,7 @@
         });
         // console.log(hateCrimeCount);
 
-        filteredHateCrimes.forEach((d) => {
+        selectedHateCrimes.forEach((d) => {
           // console.log(d["Bias Motive Description"]);
           // console.log(hateCrimeCount[d["Bias Motive Description"]]);
           if (hateCrimeTypes.includes(d["Bias Motive Description"])) {
