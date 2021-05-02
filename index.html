@@ -37,7 +37,6 @@
       }
 
       #directions {
-        width: 200px;
         margin: 30px;
       }
 
@@ -77,13 +76,12 @@
   </head>
 
   <body>
-    <div class="row">
-      <h1>Hate Crimes in NYC</h1>
-      <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-      <p id="directions">
-        Directions: Filter data by changing the time parameters and race filters
-      </p>
-    </div>
+    <div id="directions">
+
+    <h1>Hate Crimes in NYC</h1>
+    <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
+    <p>Directions: Filter data by changing the time parameters and race filters
+    </p>
     <div class="row">
       <div id="sidebar">
         <div id="filters"></div>
@@ -687,7 +685,7 @@
         function removeActive(filteredtype) {
           let activeButton = document.getElementsByClassName("active");
           let activeType = document.getElementById(filteredtype);
-          if (activeBUtton != activeType) {
+          if (activeButton != activeType) {
             activeButton.classList.remove("active");
           }
         }
@@ -696,6 +694,7 @@
           console.log("scaled time in update filtered");
           console.log(time_start);
           console.log(time_end);
+          removeActive(filteredtype);
           var element = document.getElementById(filteredType);
           element.classList.add("active");
           if (filteredType !== null) {
