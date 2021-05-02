@@ -272,7 +272,7 @@
           twoplus: "ANTI-MULTI-RACIAL GROUPS",
         };
 
-        const crimeToDemo = {}
+        const crimeToDemo = {};
         for (let key in demoToCrime) {
           crimeToDemo[demoToCrime[key]] = key;
         }
@@ -418,10 +418,41 @@
         canvas.append("g").attr("class", "brush").call(brush);
 
         //creating legends
+
         let demoLegend = d3
           .select("#legend")
           .append("g")
           .attr("id", "demoLegend");
+        demoLegend
+          .selectAll("rect")
+          .data(races)
+          .enter()
+          .append("rect")
+          .attr("x", 0)
+          .attr("y", function (d, i) {
+            return i * 18;
+          })
+          .attr("width", 12)
+          .attr("height", 12)
+          .attr("fill", function (d, i) {
+            return demoScale(d);
+          });
+
+        demoLegend
+          .selectAll("text")
+          .data(races)
+          .enter()
+          .append("text")
+          .text(function (d) {
+            return d;
+          })
+          .attr("x", 18)
+          .attr("y", function (d, i) {
+            return i * 18;
+          })
+          .attr("id", "label")
+          .attr("text-anchor", "start")
+          .attr("alignment-baseline", "hanging");
         races.forEach((r) => {
           demoLegend.append("span").text(r).style("color", demoScale(r));
         });
@@ -436,8 +467,9 @@
 
         //adding details for precinct on click
         let details = d3.select("#details");
-        details.select("#total")
-               .text(`Total number of hate crimes: ${hateCrimes.length}`);
+        details
+          .select("#total")
+          .text(`Total number of hate crimes: ${hateCrimes.length}`);
         // details
         //   .append("div")
         //   .attr("id", "precinct")
@@ -521,7 +553,7 @@
         function updateDetails() {
           let txt = details.select("#precinct");
           let ttl = details.select("#total");
-          let filteredTtl = details.select("#filteredTotal")
+          let filteredTtl = details.select("#filteredTotal");
           if (selectedPrecinct === null) {
             selectedHateCrimes = hateCrimes;
             txt.text("No selected precinct");
@@ -529,24 +561,33 @@
               `Total number of hate crimes: ${selectedHateCrimes.length}`
             );
             if (filteredType !== null) {
-              filteredTtl.text(`Total number of ${filteredType.toLowerCase()} hate crimes: ${filteredHateCrimes.length}`)
-            }
-            else {
-              filteredTtl.text("")
+              filteredTtl.text(
+                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
+                  filteredHateCrimes.length
+                }`
+              );
+            } else {
+              filteredTtl.text("");
             }
           } else {
-            selectedHateCrimes = hateCrimes.filter((d) => d.precinct == selectedPrecinct);
+            selectedHateCrimes = hateCrimes.filter(
+              (d) => d.precinct == selectedPrecinct
+            );
             ttl.text(
               `Total number of hate crimes: ${selectedHateCrimes.length}`
             );
-            selAndfil = filteredHateCrimes.filter((d) => d.precinct == selectedPrecinct)
+            selAndfil = filteredHateCrimes.filter(
+              (d) => d.precinct == selectedPrecinct
+            );
             if (filteredType !== null) {
-              filteredTtl.text(`Total number of ${filteredType.toLowerCase()} hate crimes: ${selAndfil.length}`)
+              filteredTtl.text(
+                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
+                  selAndfil.length
+                }`
+              );
+            } else {
+              filteredTtl.text("");
             }
-            else {
-              filteredTtl.text("")
-            }
-
           }
 
           displayBar();
@@ -573,15 +614,14 @@
 
         function updateDemographics() {
           if (showDemoButton.attr("clicked") === "true") {
-            console.log("updating")
-            console.log(filteredType)
+            console.log("updating");
+            console.log(filteredType);
             demoMap.selectAll("path.community").each(function (d) {
               if (filteredType === null) {
                 d3.select(this).attr("visibility", "");
               } else if (demoToCrime[getDomDemo(d)] === filteredType) {
                 d3.select(this).attr("visibility", "");
-              }
-              else {
+              } else {
                 d3.select(this).attr("visibility", "hidden");
               }
             });
@@ -814,7 +854,7 @@
             .data(hateCountList)
             .join("rect")
             .attr("class", "bar")
-            .attr("fill", d => demoScale(crimeToDemo[d['type']]))
+            .attr("fill", (d) => demoScale(crimeToDemo[d["type"]]))
             .attr("x", (d) => crimeScale(d["type"]))
             .attr("y", (d) => countScale(d["number"]))
             .attr("height", (d) => countScale(0) - countScale(d["number"]))
