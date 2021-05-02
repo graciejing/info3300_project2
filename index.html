@@ -132,13 +132,6 @@
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-      // // create linegraph
-      // const linewidth = linegraph.attr("width");
-      // const lineheight = linegraph.attr("height");
-      // const linemargin = { top: 10, right: 10, bottom: 50, left: 50 };
-      // const line_chartWidth = linewidth - linemargin.left - linemargin.right;
-      // const line_chartHeight = lineheight - linemargin.top - linemargin.bottom;
-
       const requestData = async function () {
         // a CSV dataset of NYPD hate crimes
         let hateCrimes = await d3.csv("NYPD_Hate_Crimes2.csv", d3.autoType);
@@ -274,15 +267,6 @@
           "ANTI-OTHER ETHNICITY",
           "ANTI-MULTI-RACIAL GROUPS",
         ];
-        // hateCrimes.forEach((row, i) => {
-        //   let type = row["Bias Motive Description"];
-        //   if (!hateCrimeTypes.includes(type)) {
-        //     hateCrimeTypes.push(type);
-        //   }
-        // });
-        // hateCrimeTypes.sort();
-        // console.log(hateCrimeTypes);
-        // hateCrimeTypes.pop(null);
 
         const demoToCrime = {
           asian: "ANTI-ASIAN",
@@ -473,6 +457,8 @@
         let selectedPrecinct = null;
         let selectedHateCrimes = hateCrimes;
 
+        // BEGINNING OF FUNCTIONS
+
         function getCDNum(s, boro) {
           i1 = s.indexOf("District") + 9;
           i2 = s.indexOf("--");
@@ -534,7 +520,7 @@
           let txt = d3.select("text#precinct");
           let ttl = details.select("text#total");
           if (selectedPrecinct === null) {
-            selectedHateCrimes = filteredHateCrimes;
+            selectedHateCrimes = hateCrimes;
 
             txt.text("No selected precinct");
             ttl.text(
@@ -542,7 +528,7 @@
             );
           } else {
             console.log("here");
-            selectedHateCrimes = filteredHateCrimes.filter((d) => {
+            selectedHateCrimes = hateCrimes.filter((d) => {
               return d.precinct == selectedPrecinct;
             });
 
@@ -571,33 +557,14 @@
               }
             });
 
-            // .attr("stroke-width", 0);
-            // d3.selectAll(".outline").raise()
-            // .each(function () {
-            // console.log(d3.select(this));
-            // d3.select(this).raise();
-            // });
-
             showDemoButton.attr("clicked", true);
           }
-
-          // map.selectAll("path.precinct")
-          //    .attr("stroke-width", 0)
         }
 
         function clear() {
-          // filters.selectAll(".type").each(function () {
-          //   d3.select(this).property("checked", false);
-          // });
-
-          // selectedPrecincts.forEach((precinctNumber) => {
           d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
             d3.select(this).attr("stroke-width", "1");
           });
-
-          d3.selectAll();
-          // });
-          // selectedPrecincts = [];
 
           filteredHateCrimes = hateCrimes;
           selectedHateCrimes = hateCrimes;
@@ -679,7 +646,7 @@
           //update legend
           drawLegend(colorLegend, colorScale);
           //put code updating here, assume dataset is filteredhatecrimes
-          displayBar();
+          // displayBar();
         }
 
         //creates a new dataset of only stuff from that precinct
@@ -718,91 +685,100 @@
             }
           });
         }
-        let barChart = d3.select("svg#bar");
 
-        var margin = { top: 30, right: 30, bottom: 90, left: 70 };
-        let width = barChart.attr("width");
-        let height = barChart.attr("height");
-        const chartWidth = width - margin.left - margin.right;
-        const chartHeight = height - margin.top - margin.bottom;
+        // CREATE BAR CHART
+
+        const barChart = d3.select("svg#bar");
+        const barMargin = { top: 30, right: 30, bottom: 90, left: 70 };
+        const barWidth = barChart.attr("width");
+        const barHeight = barChart.attr("height");
+        const barChartWidth = barWidth - barMargin.left - barMargin.right;
+        const barChartHeight = barHeight - barMargin.top - barMargin.bottom;
+
         let annotations = barChart.append("g").attr("id", "annotations1");
-        var chartArea = barChart
+        let chartArea = barChart
           .append("g")
           .attr("id", "points")
           .attr(
             "transform",
-            "translate(" + margin.left + "," + margin.top + ")"
+            "translate(" + barMargin.left + "," + barMargin.top + ")"
           );
         // .attr("transform", "rotate(90)");
 
         var crimeScale = d3
           .scaleBand()
           .domain(hateCrimeTypes)
-          .range([0, chartWidth])
+          .range([0, barChartWidth])
           .padding([0.2]);
-        barChart
-          .append("g")
-          .attr(
-            "transform",
-            "translate(" + margin.left + "," + (chartHeight + margin.top) + ")"
-          )
-          .call(d3.axisBottom(crimeScale).tickSizeOuter(0));
-        barChart
-          .selectAll("text")
-          .style("text-anchor", "end")
-          .attr("dx", "-.8em")
-          .attr("dy", ".15em")
-          .attr("transform", "rotate(-25)");
 
-        let leftAxis = annotations
+        let bottomAxis = d3.axisBottom(crimeScale)
+
+        annotations
           .append("g")
-          .attr("class", "y axis")
+          .attr("class", "x axis")
           .attr(
             "transform",
-            "translate(" + (margin.left - 10) + "," + margin.top + ")"
-          );
-        let leftGridlines = annotations
-          .append("g")
-          .attr("class", "y gridlines")
-          .attr(
-            "transform",
-            "translate(" + (margin.left - 10) + "," + margin.top + ")"
-          );
+            `translate(${barMargin.left},${barChartHeight+barMargin.top+10})`
+          )
+          .call(bottomAxis);
+
+        let leftAxis = d3.axisLeft()
+        let leftAxisG = annotations.append("g")
+                   .attr("class", "y gridlines")
+                   .attr("transform",`translate(${barMargin.left-10},${barMargin.top})`)
+
+        // // bottom axis
+        // barChart
+        //   .append("g")
+        //   .attr(
+        //     "transform",
+        //     "translate(" + margin.left + "," + (barChartHeight + margin.top) + ")"
+        //   )
+        //   .call(d3.axisBottom(crimeScale).tickSizeOuter(0));
+        //
+        // barChart
+        //   .selectAll("text")
+        //   .style("text-anchor", "end")
+        //   .attr("dx", "-.8em")
+        //   .attr("dy", ".15em")
+        //   .attr("transform", "rotate(-25)");
+
+
+
 
         function displayBar() {
-          // console.log(hateCrimeCount["number"]);
-          // console.log(totalExtent);
-          // console.log("hi");
           hateCrimeCount = {};
 
           hateCrimeTypes.forEach((r) => {
             hateCrimeCount[r] = { type: r, number: 0 };
           });
-          // console.log(hateCrimeCount);
 
           selectedHateCrimes.forEach((d) => {
-            // console.log(d["Bias Motive Description"]);
-            // console.log(hateCrimeCount[d["Bias Motive Description"]]);
             if (hateCrimeTypes.includes(d["Bias Motive Description"])) {
               hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
             }
           });
+
           var hateCountList = Object.values(hateCrimeCount);
           var dictLength = Object.values(hateCrimeCount).length;
           console.log(hateCountList);
           const totalExtent = d3.extent(hateCountList, (d) => d["number"]);
 
+          // y scale
           var countScale = d3
             .scaleLinear()
             .domain([0, totalExtent[1]])
-            .range([chartHeight, 0]);
-          leftAxis = d3.axisLeft(countScale);
-          leftGridlines = d3
-            .axisLeft(countScale)
-            .tickSize(-chartWidth - 10)
-            .tickFormat("");
-          annotations.call(leftAxis);
-          annotations.call(leftGridlines);
+            .range([barChartHeight, 0]);
+
+          leftAxis.scale(countScale)
+          leftAxisG.transition().call(leftAxis)
+          // leftAxis = d3.axisLeft(countScale);
+          // leftGridlines = d3
+          //   .axisLeft(countScale)
+          //   .tickSize(-barChartWidth - 10)
+          //   .tickFormat("");
+          // annotations.call(leftAxis);
+          // annotations.call(leftGridlines);
           var colorScale = d3
             .scaleOrdinal(d3.schemeCategory10)
             .domain(hateCrimeTypes);
@@ -817,6 +793,8 @@
             .attr("height", (d) => countScale(0) - countScale(d["number"]))
             .attr("width", crimeScale.bandwidth());
         }
+
+
         function getDomDemo(d) {
           n = demographics.filter((demo) => {
             return demo.boro_cd.includes(d.properties["boro_cd"]);
@@ -849,6 +827,7 @@
         }
 
         updatePrecincts();
+        updateDetails();
       };
 
       requestData();
