@@ -104,11 +104,12 @@
         <div class="row">
           <svg id="map" width="550" height="550"></svg>
           <div class="col">
-            <h4>Details:</h4>
+            <!-- <h4>Details:</h4> -->
             <div id="details">
               <div id="precinct">No selected precinct</div>
               <div id="total"></div>
-              <div id="filteredTotal"></div>
+              <div id="typeTotal"></div>
+              <div id="timeTotal"></div>
             </div>
             <svg id="bar" width="500" height="400"></svg>
           </div>
@@ -117,9 +118,6 @@
     </div>
 
     <div id="overlay"></div>
-
-    <!-- <svg id="linegraph" width="1000" height="800"></svg> -->
-
     <script>
       //create cloropleth
       const svg = d3.select("svg#map");
@@ -410,6 +408,7 @@
         let filterFunc = (d) => true;
         var time_start = min_date;
         var time_end = max_date;
+
         function brushMoved(event) {
           // console.log(event.type, event.selection, event);
 
@@ -500,25 +499,10 @@
         // drawLegend(colorLegend, colorScale)
 
         //adding details for precinct on click
-        let details = d3.select("#details");
-        details
-          .select("#total")
-          .text(`Total number of hate crimes: ${hateCrimes.length}`);
+        let details = d3.select("#details").style("visibility", "hidden");
         // details
-        //   .append("div")
-        //   .attr("id", "precinct")
-        //   .attr("x", 0)
-        //   .attr("y", 0)
-        //   .attr("fill", "black")
-        //   .text();
-
-        // details
-        //   .append("div")
-        //   .attr("id", "total")
-        //   .attr("x", 0)
-        //   .attr("y", 0)
-        //   .attr("fill", "black")
-        //   .text("");
+        //   .select("#total")
+        //   .text(`Total number of hate crimes: ${hateCrimes.length}`);
 
         let filteredType = null;
         let filteredHateCrimes = hateCrimes;
@@ -545,10 +529,11 @@
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
 
-          let txt = d3.select("text#precinct");
+          // let txt = d3.select("text#precinct");
 
           // already selected
           if (selectedPrecinct === precinctNumber) {
+            details.style("visibility", "hidden")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
             });
@@ -557,16 +542,17 @@
             // );
             selectedPrecinct = null;
             // if (selectedPrecincts === []) {
-            txt.text("No selected precinct");
+            // txt.text("No selected precinct");
             // } else {
             // txt.text(`Selected Precincts: ${selectedPrecincts}`);
           } else if (selectedPrecinct === null) {
+            details.style("visibility", "")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3);
             });
 
             selectedPrecinct = precinctNumber;
-            txt.text(`Selected Precinct: ${selectedPrecinct}`);
+            // txt.text(`Selected Precinct: ${selectedPrecinct}`);
           } else {
             d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
@@ -578,7 +564,7 @@
 
             // selectedPrecincts.push(precinctNumber);
             selectedPrecinct = precinctNumber;
-            txt.text(`Selected Precinct: ${selectedPrecinct}`);
+            // txt.text(`Selected Precinct: ${selectedPrecinct}`);
           }
 
           updateDetails();
@@ -587,40 +573,44 @@
         function updateDetails() {
           let txt = details.select("#precinct");
           let ttl = details.select("#total");
-          let filteredTtl = details.select("#filteredTotal");
+          let typeTtl = details.select("#typeTotal");
+          let timeTtl = details.select("timeTotal")
           if (selectedPrecinct === null) {
             selectedHateCrimes = hateCrimes;
             txt.text("No selected precinct");
-            ttl.text(
-              `Total number of hate crimes: ${selectedHateCrimes.length}`
-            );
+            ttl.text(`Total number of hate crimes: ${selectedHateCrimes.length}`);
             if (filteredType !== null) {
-              filteredTtl.text(
+              typeTtl.text(
                 `Total number of ${filteredType.toLowerCase()} hate crimes: ${
-                  filteredHateCrimes.length
+                  hateCrimes.filter(d => d["Bias Motive Description"] == filteredType).length
                 }`
               );
+              // filteredTtl.text(
+              //   `Total number of ${filteredType.toLowerCase()} hate crimes: ${
+              //     hateCrimes.filter(d => d["Bias Motive Description"] == filteredType).length
+              //   }`
+              // );
+
             } else {
-              filteredTtl.text("");
+              typeTtl.text("");
             }
           } else {
+            txt.text(`Selected Precinct: ${selectedPrecinct}`);
             selectedHateCrimes = hateCrimes.filter(
               (d) => d.precinct == selectedPrecinct
             );
             ttl.text(
               `Total number of hate crimes: ${selectedHateCrimes.length}`
             );
-            selAndfil = filteredHateCrimes.filter(
-              (d) => d.precinct == selectedPrecinct
+            selAndfil = hateCrimes.filter(
+              (d) => d.precinct == selectedPrecinct && d["Bias Motive Description"] == filteredType
             );
             if (filteredType !== null) {
-              filteredTtl.text(
-                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
-                  selAndfil.length
-                }`
+              typeTtl.text(
+                `Total number of ${filteredType.toLowerCase()} hate crimes: ${selAndfil.length}`
               );
             } else {
-              filteredTtl.text("");
+              typeTtl.text("");
             }
           }
 
@@ -673,6 +663,8 @@
               fil.style("background-color", "");
             });
 
+          details.style("visibility", "hidden");
+
           filteredHateCrimes = hateCrimes;
           selectedHateCrimes = hateCrimes;
           filteredType = null;
@@ -690,13 +682,7 @@
           console.log("filter click");
           updateFiltered();
         }
-        // function removeActive(filteredtype) {
-        //   let activeButton = document.getElementsByClassName("active");
-        //   let activeType = document.getElementById(filteredtype);
-        //   if (activeButton != activeType) {
-        //     activeButton.classList.remove("active");
-        //   }
-        // }
+
         //update precincts based on filtered data
         function updateFiltered() {
           console.log("scaled time in update filtered");
@@ -732,13 +718,6 @@
             );
           }
 
-          // let filterFunc = (d) =>
-          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;
-          // filteredHateCrimes = filteredHateCrimes.filter((d) =>
-          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;);
-
-          // return (d[key] === val);
-
           console.log("filtered hate crimes");
           console.log(filteredHateCrimes);
           updateDemographics();
@@ -750,16 +729,14 @@
           //initialize hate crime frequency dictionary
           let precinctCrimeCount = {};
 
-          // updateFiltered();
           precincts.features.forEach((d) => {
             precinctCrimeCount[d.properties.precinct] = 0;
           });
-          //tabulates hatecrimes
+
           filteredHateCrimes.forEach((d) => {
             precinctCrimeCount[d.precinct] += 1;
           });
 
-          //need to figure out colorScale
           //update color scale
           colorScale
             .domain(Object.values(precinctCrimeCount))
@@ -777,8 +754,6 @@
 
           //update legend
           drawLegend(colorLegend, colorScale);
-          //put code updating here, assume dataset is filteredhatecrimes
-          // displayBar();
         }
 
         //creates a new dataset of only stuff from that precinct
@@ -955,6 +930,7 @@
 
         updatePrecincts();
         updateDetails();
+        displayBar();
       };
 
       requestData();
