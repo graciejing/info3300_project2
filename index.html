@@ -616,18 +616,22 @@
           console.log(time_start);
           console.log(time_end);
 
-          filteredHateCrimes = hateCrimes.filter((d) => {
-            let include = false;
+          if (filteredType !== null) {
+            filteredHateCrimes = hateCrimes.filter((d) =>
+              d["Bias Motive Description"] === filteredType &&
+              d["Record Create Date"] >= time_start &&
+              d["Record Create Date"] <= time_end)
+          }
+          else {
+            filteredHateCrimes = hateCrimes.filter((d) =>
+              d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end);
+          }
 
-            if (d["Bias Motive Description"] === filteredType) {
-              include = true;
-            }
-            return include;
-          });
 
-          let filterFunc = (d) =>
-            d["Record Create Date"] >= start && d["Record Create Date"] <= end;
-          filteredHateCrimes = filteredHateCrimes.filter((d) => filterFunc(d));
+          // let filterFunc = (d) =>
+          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;
+          // filteredHateCrimes = filteredHateCrimes.filter((d) =>
+          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;);
 
           // return (d[key] === val);
 
