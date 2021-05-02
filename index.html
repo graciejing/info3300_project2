@@ -38,8 +38,8 @@
         display: block;
       }
 
-      button:active {
-        color: red;
+      .active {
+        background-color: red;
       }
 
       #directions {
@@ -89,6 +89,7 @@
       <svg id="map" width="800" height="500"></svg>
       <div class="col">
         <h4>Details:</h4>
+        <div id="details"></div>
         <svg id="bar" width="500" height="400"></svg>
       </div>
     </div>
@@ -99,7 +100,6 @@
         width="300"
         style="background: #fff; margin-top: 30px"
       ></svg>
-      <div id="details"></div>
     </div>
     <div id="overlay">
       <div id="legend"></div>
@@ -301,6 +301,7 @@
             // .append("input")
             .append("button")
             .attr("name", d)
+            .attr("id", d)
             // .attr("type", "checkbox")
             .attr("class", "type")
             .attr("param", "Bias Motive Description")
@@ -592,6 +593,8 @@
           let fil = d3.select(this);
           filteredType = fil.attr("name");
           console.log(filteredType);
+          var element = document.getElementById(filteredType);
+          element.classList.add("active");
           filteredHateCrimes = hateCrimes.filter((d) => {
             let include = false;
 
@@ -711,40 +714,36 @@
           .range([0, barChartWidth])
           .padding([0.2]);
 
-        let bottomAxis = d3.axisBottom(crimeScale)
+        let bottomAxis = d3.axisBottom(crimeScale);
 
         annotations
           .append("g")
           .attr("class", "x axis")
           .attr(
             "transform",
-            `translate(${barMargin.left},${barChartHeight+barMargin.top+10})`
+            `translate(${barMargin.left},${
+              barChartHeight + barMargin.top + 10
+            })`
           )
           .call(bottomAxis);
 
-        let leftAxis = d3.axisLeft()
-        let leftAxisG = annotations.append("g")
-                   .attr("class", "y gridlines")
-                   .attr("transform",`translate(${barMargin.left-10},${barMargin.top})`)
+        let leftAxis = d3.axisLeft();
+        let leftAxisG = annotations
+          .append("g")
+          .attr("class", "y gridlines")
+          .attr(
+            "transform",
+            `translate(${barMargin.left - 10},${barMargin.top})`
+          );
 
         // // bottom axis
-        // barChart
-        //   .append("g")
-        //   .attr(
-        //     "transform",
-        //     "translate(" + margin.left + "," + (barChartHeight + margin.top) + ")"
-        //   )
-        //   .call(d3.axisBottom(crimeScale).tickSizeOuter(0));
-        //
-        // barChart
-        //   .selectAll("text")
-        //   .style("text-anchor", "end")
-        //   .attr("dx", "-.8em")
-        //   .attr("dy", ".15em")
-        //   .attr("transform", "rotate(-25)");
 
-
-
+        barChart
+          .selectAll("text")
+          .style("text-anchor", "end")
+          .attr("dx", "-.8em")
+          .attr("dy", ".15em")
+          .attr("transform", "rotate(-25)");
 
         function displayBar() {
           hateCrimeCount = {};
@@ -770,8 +769,8 @@
             .domain([0, totalExtent[1]])
             .range([barChartHeight, 0]);
 
-          leftAxis.scale(countScale)
-          leftAxisG.transition().call(leftAxis)
+          leftAxis.scale(countScale);
+          leftAxisG.transition().call(leftAxis);
           // leftAxis = d3.axisLeft(countScale);
           // leftGridlines = d3
           //   .axisLeft(countScale)
@@ -794,7 +793,6 @@
             .attr("width", crimeScale.bandwidth());
         }
 
-
         function getDomDemo(d) {
           n = demographics.filter((demo) => {
             return demo.boro_cd.includes(d.properties["boro_cd"]);
@@ -811,19 +809,6 @@
             }
           });
           return domPop;
-        }
-        //get top three values
-        function getTopThree(d) {
-          console.log(selectedPrecincts);
-          console.log(demographics);
-          n = demographics.filter((demo) => {
-            return demo.boro_cd.includes(
-              (d.properties["boro_cd"] = selectedPrecincts)
-            );
-          });
-          if (n.length === 0) {
-            return null;
-          }
         }
 
         updatePrecincts();
