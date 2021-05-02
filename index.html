@@ -14,7 +14,6 @@
         display: flex;
         flex-direction: column;
         text-align: center;
-        width: 100px;
       }
 
       .row {
@@ -23,13 +22,8 @@
       }
 
       #filters {
-        position: absolute;
-        top: 200px;
-        left: 20px;
         display: block;
         text-align: center;
-        margin: auto;
-        width: 300px;
       }
 
       button {
@@ -53,7 +47,7 @@
 
       #colorlegend {
         position: absolute;
-        top: 200px;
+        top: 300px;
         left: 230px;
       }
 
@@ -68,6 +62,9 @@
         display: flex;
         flex-direction: column;
       }
+      body {
+        margin: 30px;
+      }
     </style>
   </head>
 
@@ -75,40 +72,42 @@
     <div class="row">
       <h1>Hate Crimes in NYC</h1>
       <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-    </div>
-    <div class="row">
       <p id="directions">
         Directions: Filter data by changing the time parameters and race filters
       </p>
-      <div id="control"></div>
-    </div>
-    <div id="sidebar">
-      <div id="filters"></div>
     </div>
     <div class="row">
-      <svg id="map" width="800" height="500"></svg>
+      <div id="sidebar">
+        <div id="filters"></div>
+        <div id="legend"></div>
+        <button id="demographic">Show Demographic Overlay</button>
+      </div>
       <div class="col">
-        <h4>Details:</h4>
-        <div id="details">
-          <div id="precinct">No selected precinct</div>
-          <div id="total"></div>
-          <div id="filteredTotal"></div>
+        <div id="control"></div>
+        <div id="colorlegend">
+          <svg
+            id="colorLegend"
+            height="70"
+            width="300"
+            style="background: #fff; margin-top: 30px"
+          ></svg>
         </div>
-        <svg id="bar" width="500" height="400"></svg>
+        <div class="row">
+          <svg id="map" width="550" height="550"></svg>
+          <div class="col">
+            <h4>Details:</h4>
+            <div id="details">
+              <div id="precinct">No selected precinct</div>
+              <div id="total"></div>
+              <div id="filteredTotal"></div>
+            </div>
+            <svg id="bar" width="500" height="400"></svg>
+          </div>
+        </div>
       </div>
     </div>
-    <div id="colorlegend">
-      <svg
-        id="colorLegend"
-        height="70"
-        width="300"
-        style="background: #fff; margin-top: 30px"
-      ></svg>
-    </div>
-    <div id="overlay">
-      <div id="legend"></div>
-      <button id="demographic">Show Demographic Overlay</button>
-    </div>
+
+    <div id="overlay"></div>
 
     <!-- <svg id="linegraph" width="1000" height="800"></svg> -->
 
@@ -118,23 +117,15 @@
       const linegraph = d3.select("svg#linegraph");
       const width = svg.attr("width");
       const height = svg.attr("height");
-      const margin = { top: 40, right: 20, bottom: 20, left: 200 };
-
       //precinct map
-      const mapWidth = width - margin.left - margin.right;
-      const mapHeight = height - margin.top - margin.bottom;
-      const map = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const mapWidth = width;
+      const mapHeight = height;
+      const map = svg.append("g");
 
       //demographic map
-      const demoMap = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const demoMap = svg.append("g");
 
-      const outlines = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const outlines = svg.append("g");
 
       const requestData = async function () {
         // a CSV dataset of NYPD hate crimes
