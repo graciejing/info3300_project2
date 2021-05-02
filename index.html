@@ -89,7 +89,11 @@
       <svg id="map" width="800" height="500"></svg>
       <div class="col">
         <h4>Details:</h4>
-        <div id="details"></div>
+        <div id="details">
+          <div id="precinct">No selected precinct</div>
+          <div id="total"></div>
+          <div id="filteredTotal"></div>
+        </div>
         <svg id="bar" width="500" height="400"></svg>
       </div>
     </div>
@@ -277,6 +281,11 @@
           twoplus: "ANTI-MULTI-RACIAL GROUPS",
         };
 
+        const crimeToDemo = {}
+        for (let key in demoToCrime) {
+          crimeToDemo[demoToCrime[key]] = key;
+        }
+
         // create filters
         let filters = d3.select("#filters");
         let crimeFilter = filters
@@ -436,22 +445,23 @@
 
         //adding details for precinct on click
         let details = d3.select("#details");
+        details.select("#total")
+               .text(`Total number of hate crimes: ${hateCrimes.length}`);
+        // details
+        //   .append("div")
+        //   .attr("id", "precinct")
+        //   .attr("x", 0)
+        //   .attr("y", 0)
+        //   .attr("fill", "black")
+        //   .text();
 
-        details
-          .append("text")
-          .attr("id", "precinct")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("fill", "black")
-          .text("No selected precincts");
-
-        details
-          .append("text")
-          .attr("id", "total")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("fill", "black")
-          .text("");
+        // details
+        //   .append("div")
+        //   .attr("id", "total")
+        //   .attr("x", 0)
+        //   .attr("y", 0)
+        //   .attr("fill", "black")
+        //   .text("");
 
         let filteredType = null;
         let filteredHateCrimes = hateCrimes;
@@ -518,28 +528,36 @@
         }
 
         function updateDetails() {
-          let txt = d3.select("text#precinct");
-          let ttl = details.select("text#total");
+          let txt = details.select("#precinct");
+          let ttl = details.select("#total");
+          let filteredTtl = details.select("#filteredTotal")
           if (selectedPrecinct === null) {
             selectedHateCrimes = hateCrimes;
-
             txt.text("No selected precinct");
             ttl.text(
-              `Total Number of Hate Crimes: ${selectedHateCrimes.length}`
+              `Total number of hate crimes: ${selectedHateCrimes.length}`
             );
+            if (filteredType !== null) {
+              filteredTtl.text(`Total number of ${filteredType.toLowerCase()} hate crimes: ${filteredHateCrimes.length}`)
+            }
+            else {
+              filteredTtl.text("")
+            }
           } else {
-            console.log("here");
-            selectedHateCrimes = hateCrimes.filter((d) => {
-              return d.precinct == selectedPrecinct;
-            });
-
-            console.log(selectedHateCrimes);
-            // console.log(`${selectedHateCrimes}`)
-
+            selectedHateCrimes = hateCrimes.filter((d) => d.precinct == selectedPrecinct);
             ttl.text(
-              `Total Number of Hate Crimes: ${selectedHateCrimes.length}`
+              `Total number of hate crimes: ${selectedHateCrimes.length}`
             );
+            selAndfil = filteredHateCrimes.filter((d) => d.precinct == selectedPrecinct)
+            if (filteredType !== null) {
+              filteredTtl.text(`Total number of ${filteredType.toLowerCase()} hate crimes: ${selAndfil.length}`)
+            }
+            else {
+              filteredTtl.text("")
+            }
+
           }
+
           displayBar();
         }
 
@@ -562,6 +580,23 @@
           }
         }
 
+        function updateDemographics() {
+          if (showDemoButton.attr("clicked") === "true") {
+            console.log("updating")
+            console.log(filteredType)
+            demoMap.selectAll("path.community").each(function (d) {
+              if (filteredType === null) {
+                d3.select(this).attr("visibility", "");
+              } else if (demoToCrime[getDomDemo(d)] === filteredType) {
+                d3.select(this).attr("visibility", "");
+              }
+              else {
+                d3.select(this).attr("visibility", "hidden");
+              }
+            });
+          }
+        }
+
         function clear() {
           d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
             d3.select(this).attr("stroke-width", "1");
@@ -571,6 +606,7 @@
           selectedHateCrimes = hateCrimes;
           filteredType = null;
           selectedPrecinct = null;
+          updateDemographics();
           updateDetails();
           updatePrecincts();
         }
@@ -613,6 +649,7 @@
           // return (d[key] === val);
 
           console.log(filteredHateCrimes);
+          updateDemographics();
           updateDetails();
           updatePrecincts();
         }
@@ -778,15 +815,15 @@
           //   .tickFormat("");
           // annotations.call(leftAxis);
           // annotations.call(leftGridlines);
-          var colorScale = d3
-            .scaleOrdinal(d3.schemeCategory10)
-            .domain(hateCrimeTypes);
+          // var colorScale = d3
+          //   .scaleOrdinal(d3.schemeCategory10)
+          //   .domain(hateCrimeTypes);
           chartArea
             .selectAll("rect.bar")
             .data(hateCountList)
             .join("rect")
             .attr("class", "bar")
-            .attr("fill", "steelblue")
+            .attr("fill", d => demoScale(crimeToDemo[d['type']]))
             .attr("x", (d) => crimeScale(d["type"]))
             .attr("y", (d) => countScale(d["number"]))
             .attr("height", (d) => countScale(0) - countScale(d["number"]))
