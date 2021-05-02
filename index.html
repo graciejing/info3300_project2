@@ -42,6 +42,7 @@
       }
 
       #legend {
+        display: block;
         width: 100px;
       }
 
@@ -87,6 +88,7 @@
       <div id="sidebar">
         <div id="filters"></div>
         <div id="legend"></div>
+        <svg id="demolegend"></svg>
         <button id="demographic">Show Demographic Overlay</button>
       </div>
       <div class="col">
@@ -96,7 +98,7 @@
             id="colorLegend"
             height="70"
             width="300"
-            style="background: #fff; margin-top: 30px"
+            style="background: #fff; margin-left: 30px"
           ></svg>
         </div>
         <div class="row">
@@ -425,11 +427,13 @@
         canvas.append("g").attr("class", "brush").call(brush);
 
         //creating legends
+        const legendarea = d3.select("svg#demolegend");
 
-        let demoLegend = d3
-          .select("#legend")
+        let demoLegend = legendarea
           .append("g")
-          .attr("id", "demoLegend");
+          .attr("class", "legend")
+          .attr("transform", "translate(" + 10 + ", 10)");
+
         demoLegend
           .selectAll("rect")
           .data(races)
@@ -451,7 +455,11 @@
           .enter()
           .append("text")
           .text(function (d) {
-            return d;
+            if (d === null) {
+              return "no demographic data";
+            } else {
+              return d;
+            }
           })
           .attr("x", 18)
           .attr("y", function (d, i) {
@@ -460,13 +468,6 @@
           .attr("id", "label")
           .attr("text-anchor", "start")
           .attr("alignment-baseline", "hanging");
-        races.forEach((r) => {
-          demoLegend.append("span").text(r).style("color", demoScale(r));
-        });
-        demoLegend
-          .append("span")
-          .text("no demographic data")
-          .style("color", demoScale(null));
 
         let colorLegend = d3.select("#colorLegend");
         colorLegend.append("g").attr("class", "colorbar axis");
@@ -648,7 +649,14 @@
           updateDetails();
           updatePrecincts();
         }
-
+        //remove any active filters
+        function removeActive(filteredtype) {
+          let activeButton = document.getElementsByClassName("active");
+          let activeType = document.getElementById(filteredtype);
+          if (activeBUtton != activeType) {
+            activeButton.classList.remove("active");
+          }
+        }
         //update precincts based on filtered data
         function updateFiltered() {
           // let checkedFilters = [];
@@ -664,9 +672,12 @@
           // if (checkedFilters.length === 0) {
           //   filteredHateCrimes = hateCrimes;
           // } else {
+
           let fil = d3.select(this);
           filteredType = fil.attr("name");
           console.log(filteredType);
+          removeActive(filteredType);
+
           var element = document.getElementById(filteredType);
           element.classList.add("active");
           filteredHateCrimes = hateCrimes.filter((d) => {
@@ -915,7 +926,7 @@
         const legendWidth = legend.attr("width");
         const legendHeight = legend.attr("height");
         const legendMinMax = d3.extent(legendColorScale.domain()); // way to recover the minMax from most kinds of scales
-        const barHeight = 40;
+        const barHeight = 20;
         const stepSize = 4; // warning, not using a canvas element so lots of rect tags will be created for low stepSize, causing issues with performance
         // Extend the minmax by 1 in either direction to expose more features
         const pixelScale = d3
