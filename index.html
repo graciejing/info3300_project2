@@ -315,7 +315,7 @@
             .attr("class", "type")
             .attr("param", "Bias Motive Description")
             .text(d)
-            .on("click", updateFiltered);
+            .on("click", filterClick);
 
           // crimeFilter.append("label").attr("for", d).text(d);
         });
@@ -371,10 +371,19 @@
         console.log("counts");
         console.log(counts);
 
+        // y scale
         let freqScale = d3
           .scaleLinear()
           .domain(d3.extent(counts, (d) => d.length))
           .range([timeSliderHeight, 4]);
+        let yAxis = d3.axisLeft(freqScale);
+
+        canvas.append("g").attr("class", "yAxis");
+        canvas
+          .append("g")
+          .attr("transform", `translate(-10, 0)`)
+          .attr("class", "y-axis")
+          .call(yAxis);
 
         let area = d3
           .area()
@@ -399,6 +408,8 @@
           .on("brush end", brushMoved);
 
         let filterFunc = (d) => true;
+        var time_start = min_date;
+        var time_end = max_date;
         function brushMoved(event) {
           // console.log(event.type, event.selection, event);
 
@@ -412,16 +423,31 @@
             filterFunc = (d) =>
               d["Record Create Date"] >= start &&
               d["Record Create Date"] <= end;
+
+            time_start = start;
+            time_end = end;
+            console.log("subset time");
+            console.log(time_start);
+            console.log(time_end);
           } else {
             filterFunc = (d) => true;
+            time_start = min_date;
+            time_end = max_date;
           }
+          console.log("update hate crime data");
           updateHateCrimeData(filterFunc, hateCrimes);
+
+          console.log("scaled time in brush moved");
+          console.log(time_start);
+          console.log(time_end);
+          updateFiltered();
         }
 
         function updateHateCrimeData(filterFunc, hateCrimes) {
           let filteredHateCrimes = hateCrimes.filter((d) => filterFunc(d));
 
           console.log(filteredHateCrimes);
+          return filteredHateCrimes;
         }
 
         canvas.append("g").attr("class", "brush").call(brush);
@@ -649,7 +675,15 @@
           updateDetails();
           updatePrecincts();
         }
-        //remove any active filters
+
+        function filterClick() {
+          let fil = d3.select(this);
+          filteredType = fil.attr("name");
+          console.log(filteredType);
+
+          console.log("filter click");
+          updateFiltered();
+        }
         function removeActive(filteredtype) {
           let activeButton = document.getElementsByClassName("active");
           let activeType = document.getElementById(filteredtype);
@@ -659,44 +693,34 @@
         }
         //update precincts based on filtered data
         function updateFiltered() {
-          // let checkedFilters = [];
-          // //get filtered data
-          // filters.selectAll(".type").each(function () {
-          //   let filter = d3.select(this);
-          //   let checked = filter.property("checked");
-          //   if (checked) {
-          //     checkedFilters.push(filter);
-          //   }
-          // });
-
-          // if (checkedFilters.length === 0) {
-          //   filteredHateCrimes = hateCrimes;
-          // } else {
-
-          let fil = d3.select(this);
-          filteredType = fil.attr("name");
-          console.log(filteredType);
-          removeActive(filteredType);
-
+          console.log("scaled time in update filtered");
+          console.log(time_start);
+          console.log(time_end);
           var element = document.getElementById(filteredType);
           element.classList.add("active");
-          filteredHateCrimes = hateCrimes.filter((d) => {
-            let include = false;
+          if (filteredType !== null) {
+            filteredHateCrimes = hateCrimes.filter(
+              (d) =>
+                d["Bias Motive Description"] === filteredType &&
+                d["Record Create Date"] >= time_start &&
+                d["Record Create Date"] <= time_end
+            );
+          } else {
+            filteredHateCrimes = hateCrimes.filter(
+              (d) =>
+                d["Record Create Date"] >= time_start &&
+                d["Record Create Date"] <= time_end
+            );
+          }
 
-            //check satisfies hate crime type filters
-            // checkedFilters.forEach((fil) => {
-            // console.log(fil);
-
-            let key = fil.attr("param");
-            let val = fil.attr("name");
-            if (d[key] === val) {
-              include = true;
-            }
-            return include;
-          });
+          // let filterFunc = (d) =>
+          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;
+          // filteredHateCrimes = filteredHateCrimes.filter((d) =>
+          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;);
 
           // return (d[key] === val);
 
+          console.log("filtered hate crimes");
           console.log(filteredHateCrimes);
           updateDemographics();
           updateDetails();
