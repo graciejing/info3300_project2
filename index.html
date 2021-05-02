@@ -65,6 +65,13 @@
       body {
         margin: 30px;
       }
+      .gridlines line {
+        stroke: #bbb;
+      }
+
+      .gridlines .domain {
+        stroke: none;
+      }
     </style>
   </head>
 
@@ -756,13 +763,20 @@
           .call(bottomAxis);
 
         let leftAxis = d3.axisLeft();
+        let leftGridlines = d3.axisLeft().tickSize(-barChartWidth-10).tickFormat("")
         let leftAxisG = annotations
           .append("g")
-          .attr("class", "y gridlines")
+          .attr("class", "y axis")
           .attr(
             "transform",
             `translate(${barMargin.left - 10},${barMargin.top})`
           );
+        let leftGridlinesG = annotations.append("g")
+                                        .attr("class", "y gridlines")
+                                        .attr(
+                                          "transform",
+                                          `translate(${barMargin.left - 10},${barMargin.top})`
+                                        );
 
         // // bottom axis
 
@@ -799,6 +813,8 @@
 
           leftAxis.scale(countScale);
           leftAxisG.transition().call(leftAxis);
+          leftGridlines.scale(countScale);
+          leftGridlinesG.transition().call(leftGridlines);
           // leftAxis = d3.axisLeft(countScale);
           // leftGridlines = d3
           //   .axisLeft(countScale)
