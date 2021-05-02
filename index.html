@@ -667,6 +667,12 @@
             d3.select(this).attr("stroke-width", "1");
           });
 
+          d3.selectAll(".type")
+            .each( function() {
+              let fil = d3.select(this);
+              fil.style("background-color", "");
+            });
+
           filteredHateCrimes = hateCrimes;
           selectedHateCrimes = hateCrimes;
           filteredType = null;
@@ -684,20 +690,33 @@
           console.log("filter click");
           updateFiltered();
         }
-        function removeActive(filteredtype) {
-          let activeButton = document.getElementsByClassName("active");
-          let activeType = document.getElementById(filteredtype);
-          if (activeBUtton != activeType) {
-            activeButton.classList.remove("active");
-          }
-        }
+        // function removeActive(filteredtype) {
+        //   let activeButton = document.getElementsByClassName("active");
+        //   let activeType = document.getElementById(filteredtype);
+        //   if (activeButton != activeType) {
+        //     activeButton.classList.remove("active");
+        //   }
+        // }
         //update precincts based on filtered data
         function updateFiltered() {
           console.log("scaled time in update filtered");
           console.log(time_start);
           console.log(time_end);
-          var element = document.getElementById(filteredType);
-          element.classList.add("active");
+          // var element = document.getElementById(filteredType);
+          // element.classList.add("active");
+
+          d3.selectAll(".type")
+            .each( function() {
+            let fil = d3.select(this);
+            if (fil.attr("name") == filteredType) {
+              fil.style("background-color", "red");
+            }
+            else {
+              fil.style("background-color", "");
+            }
+          });
+
+
           if (filteredType !== null) {
             filteredHateCrimes = hateCrimes.filter(
               (d) =>
