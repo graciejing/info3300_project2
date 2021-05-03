@@ -6,7 +6,8 @@
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Domine&display=swap');
       body{
-        width: 90vw;
+        margin: auto;
+        width: 95vw;
         font-family: 'Domine', serif;
         color: 	#0b405a;
       }
@@ -23,12 +24,16 @@
       }
 
       #sidebar {
+        border-top:2px solid #d05228	;
         border-right: 2px solid #d05228	;
         background: #ffcebf;
         display: flex;
         flex-direction: column;
         text-align: left;
         width: 225px;
+      }
+      #sidebar h4{
+        margin-top: 20px;
       }
       #control{
         background-color: #ffcebf;
@@ -41,10 +46,19 @@
         padding: 20px;
       }
       .detailscolor{
+        border-top:#d05228 2px solid;
+
         background-color: #ffcebf;
 
         border-bottom: 2px solid #d05228	;
-        padding: 20px;
+        padding: 20px 20px 0px 20px;
+      }
+      .detailscolor p{
+        margin-top:2px;
+        margin-bottom: 8px;
+      }
+      .detailscolor h4{
+        margin-bottom: 0px;
       }
       .row {
         display: flex;
@@ -52,6 +66,7 @@
       }
       h4{
         margin-top:0px;
+        margin-bottom:15px;
       }
       #filters {
         display: block;
@@ -66,7 +81,14 @@
         color:#d05228;
         background-color: white;
       }
+      button#clear:hover{
+        background-color: #ffc63d
 
+      }
+      button:hover{
+        background-color: #ffc63d
+
+      }
       #directions {
         display: flex;
         flex-direction: column;
@@ -79,7 +101,6 @@
       } */
       #header{
         padding: 10px;
-        border-bottom: 2px solid #d05228	;
       }
       #legend {
         display: block;
@@ -88,7 +109,7 @@
 
       #colorlegend {
         position: absolute;
-        top: 1000px;
+        top: 970px;
         left: 500px;
       }
 
@@ -102,10 +123,6 @@
       .col {
         display: flex;
         flex-direction: column;
-      }
-      body {
-        margin: 20px;
-        padding: 30px;
       }
       .gridlines line {
         stroke: #bbb;
@@ -122,7 +139,7 @@
       <div id="header">
     <h1>Hate Crimes in NYC</h1>
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-    <p>Directions: Filter data by changing the time parameters and race filters</p>
+    <p>Directions: Filter and visualize data by changing the time parameters or race-based hatecrime filters, selecting a specific police precinct, or adding a demographic overlay.</p>
     <p>This visualization was designed to help users identify the frequency of hate
       crimes across New York City. We want to focus on racially-based hate crimes, so
       the user can choose to filter by a specific type of anti-race hate crime. To
@@ -136,8 +153,8 @@
   </div>
     <div class="row">
       <div id="sidebar" class="detailscolor">
-        <h4><strong>Filter</strong> Data by Race</h4>
         <div id="clearArea"></div>
+        <h4><strong>Filter</strong> Data by Race</h4>
         <div id="filters"></div>
         <div id="legend"></div>
         <h4><strong>Overlay</strong> with Main Demographic per Community District</h4>
@@ -146,20 +163,21 @@
       </div>
       <div class="col">
         <div class = "detailscolor">
-        <h4><strong>Time Scrubber</strong> & Hate Crimes over time Related to Race Filters</h4>
-        <p>Narrow the dataset according to time ranges as well with the line graph.</p>
+        <h4><strong>Time Scrubber</strong> & Hate Crimes Related to Race Filters Over Time        </h4>
+
+          <p>Narrow the dataset according to time ranges as well with the line graph</p>
         <div id="control"></div>
       </div>
         <div class="row">
           <div class="col">
             <div id="detailscss">
           <h4><strong>Click</strong> on Precinct to Filter & Frequency of Hate Crimes Per Police Precinct</h4>
-          <svg id="map" width="475" height="550"></svg>
+          <svg id="map" width="475" height="475"></svg>
         </div>
         </div>
           <div class="col">
             <div id="details">
-              <h4>Details:</h4>
+              <h4>Number of hate crimes per added filter:</h4>
               <div id="precinct">No selected precinct</div>
               <div id="total"></div>
               <div id="typeTotal"></div>
@@ -168,7 +186,7 @@
             </div>
             <div id ="detailscss">
             <h4>Number of Hate Crimes Reported per Category related to Precincts and Time Filters</h4>
-            <svg id="bar" width="500" height="400"></svg>
+            <svg id="bar" width="400" height="350"></svg>
           </div>
           </div>
 
@@ -296,9 +314,8 @@
         let races = [
           "asian",
           "black",
-          "hispanic",
           "white",
-          "native",
+          "hispanic",
           // "hawaiianpi",
           "other",
           "twoplus",
@@ -309,7 +326,10 @@
           .scaleOrdinal()
           .domain(races)
           .range(d3.schemeCategory10);
-
+        let controlScale = d3
+        .scaleOrdinal()
+        .domain(races)
+        .range(["#D5D5D6", "#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD","#8C564B", ])
         var demoProjection = d3
           .geoMercator()
           .fitSize([mapWidth, mapHeight], communities);
@@ -454,7 +474,7 @@
             .area()
             .x((d) => xScale(d.x1) + 10)
             .y0(freqScale(0))
-            .y1((d) => freqScale(d.length));;
+            .y1((d) => freqScale(d.length))
             // .curve(d3.curveNatural);
 
           canvas.select(".areaLayer").remove();
@@ -466,6 +486,7 @@
             .datum(counts)
             .attr("transform", `translate(${axisLeftMargin}, -${yExtent[0]})`)
             .attr("class", "area")
+            .style("fill", (d) =>controlScale(d))
             .attr("d", area);
 
             areaLayer.lower();
@@ -739,10 +760,12 @@
 
         function showDemographics() {
           if (showDemoButton.attr("clicked") === "true") {
+            showDemoButton.style("background-color", "white")
             showDemoButton.text("Show Demographic Overlay");
             demoMap.selectAll("path.community").attr("visibility", "hidden");
             showDemoButton.attr("clicked", false);
           } else {
+            showDemoButton.style("background-color", "#ffc63d")
             showDemoButton.text("Remove Demographic Overlay");
             demoMap.selectAll("path.community").each(function (d) {
               if (filteredType === null) {
@@ -771,15 +794,16 @@
         }
 
         function clear() {
-          d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
-            d3.select(this).attr("stroke-width", "1");
-          });
 
           d3.selectAll(".type")
             .each( function() {
               let fil = d3.select(this);
-              fil.style("background-color", "");
+              fil.style("background-color", "white");
             });
+            
+          d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
+            d3.select(this).attr("stroke-width", "1");
+          });
 
           details.style("visibility", "hidden");
           canvas.select("g.brush").call(myBrush.move, null);
