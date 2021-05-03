@@ -24,7 +24,7 @@
         width: 225px;
       }
       #control{
-        padding: 20px;
+        padding: 15px;
         background-color: #ffcebf;
       }
       #details{
@@ -51,7 +51,9 @@
       }
 
       #directions {
-        margin: 30px;
+        display: flex;
+        flex-direction: column;
+        margin: auto;
       }
       #header{
         padding: 10px;
@@ -144,15 +146,17 @@
       const linegraph = d3.select("svg#linegraph");
       const width = svg.attr("width");
       const height = svg.attr("height");
-      //precinct map
-      const mapWidth = width;
-      const mapHeight = height;
-      const map = svg.append("g");
-
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 }
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg.append("g")
+      .attr("transform","translate("+margin.left+","+margin.top+")");
       //demographic map
-      const demoMap = svg.append("g");
+      const demoMap = svg.append("g")
+      .attr("transform","translate("+margin.left+","+margin.top+")");
 
-      const outlines = svg.append("g");
+      const outlines = svg.append("g")
+      .attr("transform","translate("+margin.left+","+margin.top+")");
 
       const requestData = async function () {
         // a CSV dataset of NYPD hate crimes
