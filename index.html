@@ -155,9 +155,9 @@
             <svg id="bar" width="500" height="400"></svg>
           </div>
           </div>
-          
+
         </div>
-        
+
       </div>
       <div id="colorlegend">
         <svg
@@ -382,7 +382,7 @@
         // date object of time scale range
         var display_time_start = time_start;
         var display_time_end = time_end;
-        
+
         function makePath() {
           let values = hateCrimes;
           if (filteredType !== null) {
@@ -391,7 +391,7 @@
                 d["Bias Motive Description"] === filteredType
             );
           }
-          
+
           values = values.map(d => d["Record Create Date"]);
 
           let numBins = 30;
@@ -412,7 +412,7 @@
             x0: 0,
             x1: counts[0].x0,
             length: counts[0].length,
-            
+
           });
 
           console.log("counts");
@@ -781,13 +781,14 @@
         function filterClick() {
           let fil = d3.select(this);
           if (fil.attr("clicked") == "true") {
-            console.log("true")
             filteredType = null;
             fil.attr("clicked", false)
           }
           else {
-            console.log("false")
             filteredType = fil.attr("name");
+            d3.selectAll(".type").each(function() {
+              d3.select(this).attr("clicked", false)
+            })
             fil.attr("clicked", true)
           }
 
