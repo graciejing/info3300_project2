@@ -4,6 +4,11 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Domine&display=swap');
+      body{
+        font-family: 'Domine', serif;
+        color: 	#0b405a;
+      }
       .area {
         stroke: royalblue;
         fill: skyblue;
@@ -11,11 +16,19 @@
       }
 
       #sidebar {
+        border: 2px solid #d05228	;
+        background: #BFD5E2;
         display: flex;
         flex-direction: column;
         text-align: center;
       }
+      #control{
+        background-color: #BFD5E2;
+      }
+      #details{
+        border: 2px solid #d05228	;
 
+      }
       .row {
         display: flex;
         flex-direction: row;
@@ -32,14 +45,13 @@
         display: block;
       }
 
-      .active {
-        background-color: red;
-      }
-
       #directions {
         margin: 30px;
       }
-
+      #header{
+        padding: 10px;
+        border: 2px solid #d05228	;
+      }
       #legend {
         display: block;
         width: 100px;
@@ -61,6 +73,8 @@
       .col {
         display: flex;
         flex-direction: column;
+        border: 2px solid #d05228	;
+
       }
       body {
         margin: 30px;
@@ -77,11 +91,12 @@
 
   <body>
     <div id="directions">
-
+      <div id="header">
     <h1>Hate Crimes in NYC</h1>
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
     <p>Directions: Filter data by changing the time parameters and race filters
     </p>
+  </div>
     <div class="row">
       <div id="sidebar">
         <div id="filters"></div>
@@ -102,8 +117,9 @@
         <div class="row">
           <svg id="map" width="550" height="550"></svg>
           <div class="col">
-            <h4>Details:</h4>
             <div id="details">
+              <h4>Details:</h4>
+
               <div id="precinct">No selected precinct</div>
               <div id="total"></div>
               <div id="filteredTotal"></div>
@@ -707,7 +723,7 @@
             .each( function() {
             let fil = d3.select(this);
             if (fil.attr("name") == filteredType) {
-              fil.style("background-color", "red");
+              fil.style("background-color", "#B1B5C8");
             }
             else {
               fil.style("background-color", "");
