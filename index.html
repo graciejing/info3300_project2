@@ -322,27 +322,32 @@
 
         let timeSliderHeight = 80;
         let timeSliderWidth = 900;
+        let axisLeftMargin = 20;
 
         let values = hateCrimes.map((d) => d["Record Create Date"]);
 
-        let formatTime = d3.timeFormat("%B %d, %Y");
+        let formatTimeMonth = d3.timeFormat("%B %Y");
+        let formatTimeDate = d3.timeFormat("%B %d %Y");
 
         let xScale = d3
           .scaleLinear()
           .domain([min_date, max_date])
           .range([10, timeSliderWidth - 10]);
-        let xAxis = d3.axisBottom(xScale).tickFormat(formatTime);
+        let xAxis = d3.axisBottom(xScale).tickFormat(formatTimeMonth);
 
         let wrapper = d3.select("#control");
         let canvas = wrapper
           .append("svg")
-          .attr("width", timeSliderWidth)
+          .attr("width", timeSliderWidth + 50)
           .attr("height", timeSliderHeight + 50);
 
         let areaLayer = canvas.append("g").attr("class", "areaLayer");
         canvas
           .append("g")
-          .attr("transform", `translate(0, ${timeSliderHeight})`)
+          .attr(
+            "transform",
+            `translate(${axisLeftMargin}, ${timeSliderHeight})`
+          )
           .attr("class", "x-axis")
           .call(xAxis);
 
@@ -370,16 +375,16 @@
         console.log(counts);
 
         // y scale
+        let yExtent = d3.extent(counts, (d) => d.length);
         let freqScale = d3
           .scaleLinear()
-          .domain(d3.extent(counts, (d) => d.length))
+          .domain(yExtent)
           .range([timeSliderHeight, 4]);
         let yAxis = d3.axisLeft(freqScale);
 
-        canvas.append("g").attr("class", "yAxis");
         canvas
           .append("g")
-          .attr("transform", `translate(-10, 0)`)
+          .attr("transform", `translate(${axisLeftMargin}, 0)`)
           .attr("class", "y-axis")
           .call(yAxis);
 
@@ -393,23 +398,28 @@
         areaLayer
           .append("path")
           .datum(counts)
-          // .attr("transform", `translate(0, -50)`)
+          .attr("transform", `translate(${axisLeftMargin}, -${yExtent[0]})`)
           .attr("class", "area")
           .attr("d", area);
 
-        let brush = d3
+        let myBrush = d3
           .brushX()
           .extent([
             [10, 0],
-            [timeSliderWidth - 10, timeSliderHeight],
+            [timeSliderWidth - axisLeftMargin - 10, timeSliderHeight],
           ])
           .on("brush end", brushMoved);
 
         let filterFunc = (d) => true;
+        // integer of time scale range
         var time_start = min_date;
         var time_end = max_date;
+
+        // date object of time scale range
+        var display_time_start = time_start;
+        var display_time_end = time_end;
         function brushMoved(event) {
-          // console.log(event.type, event.selection, event);
+          console.log(event.type, event.selection, event);
 
           if (event.selection !== null) {
             let startPixels = event.selection[0];
@@ -424,21 +434,24 @@
 
             time_start = start;
             time_end = end;
-            console.log("subset time");
-            console.log(time_start);
-            console.log(time_end);
+
+            display_time_start = formatTimeDate(new Date(time_start));
+            display_time_end = formatTimeDate(new Date(time_end));
           } else {
             filterFunc = (d) => true;
             time_start = min_date;
             time_end = max_date;
+            display_time_start = formatTimeDate(time_start);
+            display_time_end = formatTimeDate(time_end);
           }
-          console.log("update hate crime data");
-          updateHateCrimeData(filterFunc, hateCrimes);
+          // console.log("update hate crime data");
+          // updateHateCrimeData(filterFunc, hateCrimes);
 
           console.log("scaled time in brush moved");
-          console.log(time_start);
-          console.log(time_end);
+          console.log(display_time_start);
+          console.log(display_time_end);
           updateFiltered();
+          console.log("remove brush");
         }
 
         function updateHateCrimeData(filterFunc, hateCrimes) {
@@ -448,7 +461,7 @@
           return filteredHateCrimes;
         }
 
-        canvas.append("g").attr("class", "brush").call(brush);
+        canvas.append("g").attr("class", "brush").call(myBrush);
 
         //creating legends
         const legendarea = d3.select("svg#demolegend");
@@ -697,11 +710,6 @@
         // }
         //update precincts based on filtered data
         function updateFiltered() {
-          console.log("scaled time in update filtered");
-          console.log(time_start);
-          console.log(time_end);
-          // var element = document.getElementById(filteredType);
-          // element.classList.add("active");
 
           d3.selectAll(".type")
             .each( function() {
@@ -713,7 +721,6 @@
               fil.style("background-color", "");
             }
           });
-
 
           if (filteredType !== null) {
             filteredHateCrimes = hateCrimes.filter(
@@ -729,13 +736,6 @@
                 d["Record Create Date"] <= time_end
             );
           }
-
-          // let filterFunc = (d) =>
-          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;
-          // filteredHateCrimes = filteredHateCrimes.filter((d) =>
-          //   d["Record Create Date"] >= time_start && d["Record Create Date"] <= time_end;);
-
-          // return (d[key] === val);
 
           console.log("filtered hate crimes");
           console.log(filteredHateCrimes);
