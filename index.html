@@ -10,6 +10,12 @@
         font-family: 'Domine', serif;
         color: 	#0b405a;
       }
+      strong{
+        background: #ffc63d;
+      }
+      rect.selection{
+        fill: #ffc63d
+      }
       .area {
         stroke: #d05228;
         fill: white;
@@ -121,33 +127,33 @@
       crimes across New York City. We want to focus on racially-based hate crimes, so
       the user can choose to filter by a specific type of anti-race hate crime. To
       visualize change across time, the user may also select specific ranges of time
-      to examine. To see demographic data, the user can choose to show
+      to examine and see if there are spikes due to current or past events. To see demographic data, the user can choose to show
       the demographic overlay, which will show the main demographic of each area. When
       a filter is selected this will only indicate the areas of that selected demographic.
       Since the demographic overlay still shows the choropleth map of frequency of
-      hate crimes in each precinct, the user can see if there are may be certain relationships
-      where one area that is mainly a certain race has a high amount of that same race's hate
-      crimes, or if an area of mainly a certain race has been targeting a different race.
+      hate crimes in each precinct, the user can see if areas with one race as the main demographic is the area 
+      where most of the hate crimes of that demographic are happening.
   </div>
     <div class="row">
       <div id="sidebar" class="detailscolor">
-        <h4>Filter Data by Race</h4>
+        <h4><strong>Filter</strong> Data by Race</h4>
+        <div id="clearArea"></div>
         <div id="filters"></div>
         <div id="legend"></div>
-        <h4>Overlay with Main Demographic per Community District</h4>
+        <h4><strong>Overlay</strong> with Main Demographic per Community District</h4>
         <svg id="demolegend"></svg>
         <button id="demographic">Show Demographic Overlay</button>
       </div>
       <div class="col">
         <div class = "detailscolor">
-        <h4>Time Scrubber & Hate Crimes over time Related to Race Filters</h4>
+        <h4><strong>Time Scrubber</strong> & Hate Crimes over time Related to Race Filters</h4>
         <p>Narrow the dataset according to time ranges as well with the line graph.</p>
         <div id="control"></div>
       </div>
         <div class="row">
           <div class="col">
             <div id="detailscss">
-          <h4>Frequency of Hate Crimes Per Police Precinct</h4>
+          <h4><strong>Click</strong> on Precinct to Filter & Frequency of Hate Crimes Per Police Precinct</h4>
           <svg id="map" width="475" height="550"></svg>
         </div>
         </div>
@@ -354,11 +360,11 @@
           .append("div")
           .attr("id", "type")
           .attr("class", "filter");
-
-        let clearButton = filters
+        clearArea = d3.select("#clearArea")
+        let clearButton = clearArea
           .append("button")
           .attr("id", "clear")
-          .text("Clear")
+          .text("Reset Visualizations")
           .on("click", clear);
 
         hateCrimeTypes.forEach((d) => {
