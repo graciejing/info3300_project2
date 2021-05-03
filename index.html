@@ -6,6 +6,7 @@
     <style>
       @import url('https://fonts.googleapis.com/css2?family=Domine&display=swap');
       body{
+        width: 90vw;
         font-family: 'Domine', serif;
         color: 	#0b405a;
       }
@@ -29,13 +30,21 @@
       }
       #details{
         border: 2px solid #d05228	;
+        padding: 20px;
+      }
+      #detailscolor{
+        background-color: #ffcebf;
 
+        border: 2px solid #d05228	;
+        padding: 20px;
       }
       .row {
         display: flex;
         flex-direction: row;
       }
-
+      h4{
+        margin-top:0px;
+      }
       #filters {
         display: block;
         text-align: center;
@@ -55,6 +64,11 @@
         flex-direction: column;
         margin: auto;
       }
+      /* #absolute{
+        position:absolute;
+        top: 200px;
+        left:100px;
+      } */
       #header{
         padding: 10px;
         border: 2px solid #d05228	;
@@ -66,7 +80,7 @@
 
       #colorlegend {
         position: absolute;
-        top: 300px;
+        bottom: 100px;
         left: 230px;
       }
 
@@ -112,7 +126,11 @@
         <button id="demographic">Show Demographic Overlay</button>
       </div>
       <div class="col">
+        <div id = "detailscolor">
+        <h4>Time Scrubber & Hate Crimes over time Related to Race Filters</h4>
+        <p>Narrow the dataset according to time ranges as well with the line graph.</p>
         <div id="control"></div>
+      </div>
         <div id="colorlegend">
           <svg
             id="colorLegend"
@@ -122,18 +140,25 @@
           ></svg>
         </div>
         <div class="row">
+          <div class="col">
+            <div id="details">
+          <h4>Frequency of Hate Crimes Per Police Precinct</h4>
           <svg id="map" width="550" height="550"></svg>
+        </div>
+        </div>
           <div class="col">
             <div id="details">
               <h4>Details:</h4>
-
               <div id="precinct">No selected precinct</div>
               <div id="total"></div>
               <div id="typeTotal"></div>
               <div id="timeTotal"></div>
               <div id="allTotal"></div>
             </div>
+            <div id ="details">
+            <h4>Number of Hate Crimes Reported per Category related to Precincts and Time Filters</h4>
             <svg id="bar" width="500" height="400"></svg>
+          </div>
           </div>
         </div>
       </div>
@@ -143,7 +168,6 @@
     <script>
       //create cloropleth
       const svg = d3.select("svg#map");
-      const linegraph = d3.select("svg#linegraph");
       const width = svg.attr("width");
       const height = svg.attr("height");
       const margin = { top: 20, right: 20, bottom: 20, left: 20 }
