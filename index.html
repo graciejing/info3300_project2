@@ -651,7 +651,7 @@
             }
             if (time_start != min_date || time_end != max_date) {
               timeTtl.text(
-                `Number of hate crimes in selected time range: ${
+                `Number of hate crimes between ${display_time_start} and ${display_time_end}: ${
                   hateCrimes.filter(d => d["Record Create Date"] >= time_start &&
                   d["Record Create Date"] <= time_end).length
                 }`);
@@ -661,7 +661,7 @@
             }
             if ((filteredType !== null) && (time_start != min_date || time_end != max_date)) {
               allTtl.text(
-                `Number of ${filteredType.toLowerCase()} hate crimes in selected time range: ${
+                `Number of ${filteredType.toLowerCase()} hate crimes between ${display_time_start} and ${display_time_end}: ${
                   hateCrimes.filter(d =>
                     d["Bias Motive Description"] == filteredType &&
                     d["Record Create Date"] >= time_start &&
@@ -694,7 +694,7 @@
             }
             if (time_start != min_date || time_end != max_date) {
               timeTtl.text(
-                `Number of hate crimes in selected time range: ${
+                `Number of hate crimes between ${display_time_start} and ${display_time_end}: ${
                   hateCrimes.filter(d => d["Record Create Date"] >= time_start &&
                   d["Record Create Date"] <= time_end &&
                   d.precinct == selectedPrecinct).length
