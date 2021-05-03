@@ -4,23 +4,47 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Domine&display=swap');
+      body{
+        width: 90vw;
+        font-family: 'Domine', serif;
+        color: 	#0b405a;
+      }
       .area {
-        stroke: royalblue;
-        fill: skyblue;
+        stroke: #d05228;
+        fill: white;
         stroke-width: 2px;
       }
 
       #sidebar {
+        border: 2px solid #d05228	;
+        background: #ffcebf;
         display: flex;
         flex-direction: column;
         text-align: center;
+        width: 225px;
       }
+      #control{
+        padding: 15px;
+        background-color: #ffcebf;
+      }
+      #details{
+        border: 2px solid #d05228	;
+        padding: 20px;
+      }
+      #detailscolor{
+        background-color: #ffcebf;
 
+        border: 2px solid #d05228	;
+        padding: 20px;
+      }
       .row {
         display: flex;
         flex-direction: row;
       }
-
+      h4{
+        margin-top:0px;
+      }
       #filters {
         display: block;
         text-align: center;
@@ -30,16 +54,25 @@
         padding: 5px;
         margin: 10px;
         display: block;
-      }
-
-      .active {
-        background-color: red;
+        border: #d05228 solid 2px;
+        color:#d05228;
+        background-color: white;
       }
 
       #directions {
-        margin: 30px;
+        display: flex;
+        flex-direction: column;
+        margin: auto;
       }
-
+      /* #absolute{
+        position:absolute;
+        top: 200px;
+        left:100px;
+      } */
+      #header{
+        padding: 10px;
+        border: 2px solid #d05228	;
+      }
       #legend {
         display: block;
         width: 100px;
@@ -47,7 +80,7 @@
 
       #colorlegend {
         position: absolute;
-        top: 300px;
+        bottom: 100px;
         left: 230px;
       }
 
@@ -61,6 +94,8 @@
       .col {
         display: flex;
         flex-direction: column;
+        border: 2px solid #d05228	;
+
       }
       body {
         margin: 30px;
@@ -77,11 +112,12 @@
 
   <body>
     <div id="directions">
-
+      <div id="header">
     <h1>Hate Crimes in NYC</h1>
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
     <p>Directions: Filter data by changing the time parameters and race filters
     </p>
+  </div>
     <div class="row">
       <div id="sidebar">
         <div id="filters"></div>
@@ -90,7 +126,11 @@
         <button id="demographic">Show Demographic Overlay</button>
       </div>
       <div class="col">
+        <div id = "detailscolor">
+        <h4>Time Scrubber & Hate Crimes over time Related to Race Filters</h4>
+        <p>Narrow the dataset according to time ranges as well with the line graph.</p>
         <div id="control"></div>
+      </div>
         <div id="colorlegend">
           <svg
             id="colorLegend"
@@ -100,39 +140,48 @@
           ></svg>
         </div>
         <div class="row">
-          <svg id="map" width="550" height="550"></svg>
           <div class="col">
-            <h4>Details:</h4>
             <div id="details">
+          <h4>Frequency of Hate Crimes Per Police Precinct</h4>
+          <svg id="map" width="550" height="550"></svg>
+        </div>
+        </div>
+          <div class="col">
+            <div id="details">
+              <h4>Details:</h4>
               <div id="precinct">No selected precinct</div>
               <div id="total"></div>
-              <div id="filteredTotal"></div>
+              <div id="typeTotal"></div>
+              <div id="timeTotal"></div>
+              <div id="allTotal"></div>
             </div>
+            <div id ="details">
+            <h4>Number of Hate Crimes Reported per Category related to Precincts and Time Filters</h4>
             <svg id="bar" width="500" height="400"></svg>
+          </div>
           </div>
         </div>
       </div>
     </div>
 
     <div id="overlay"></div>
-
-    <!-- <svg id="linegraph" width="1000" height="800"></svg> -->
-
     <script>
+    //hello
       //create cloropleth
       const svg = d3.select("svg#map");
-      const linegraph = d3.select("svg#linegraph");
       const width = svg.attr("width");
       const height = svg.attr("height");
-      //precinct map
-      const mapWidth = width;
-      const mapHeight = height;
-      const map = svg.append("g");
-
+      const margin = { top: 20, right: 20, bottom: 20, left: 20 }
+      const mapWidth = width - margin.left - margin.right;
+      const mapHeight = height - margin.top - margin.bottom;
+      const map = svg.append("g")
+      .attr("transform","translate("+margin.left+","+margin.top+")");
       //demographic map
-      const demoMap = svg.append("g");
+      const demoMap = svg.append("g")
+      .attr("transform","translate("+margin.left+","+margin.top+")");
 
-      const outlines = svg.append("g");
+      const outlines = svg.append("g")
+      .attr("transform","translate("+margin.left+","+margin.top+")");
 
       const requestData = async function () {
         // a CSV dataset of NYPD hate crimes
@@ -291,12 +340,6 @@
           .attr("id", "type")
           .attr("class", "filter");
 
-        // let updateButton = filters
-        //   .append("button")
-        //   .attr("id", "update")
-        //   .text("Update")
-        //   .on("click", updateFiltered);
-
         let clearButton = filters
           .append("button")
           .attr("id", "clear")
@@ -309,13 +352,11 @@
             .append("button")
             .attr("name", d)
             .attr("id", d)
-            // .attr("type", "checkbox")
             .attr("class", "type")
             .attr("param", "Bias Motive Description")
+            .attr("clicked", false)
             .text(d)
             .on("click", filterClick);
-
-          // crimeFilter.append("label").attr("for", d).text(d);
         });
 
         let filteredType = null;
@@ -429,7 +470,7 @@
           .append("g")
           .attr(
             "transform",
-            `translate(${axisLeftMargin}, ${timeSliderHeight})`
+            `translate(${axisLeftMargin}, ${timeSliderHeight + 15})`
           )
           .attr("class", "x-axis")
           .call(xAxis);
@@ -524,25 +565,10 @@
         // drawLegend(colorLegend, colorScale)
 
         //adding details for precinct on click
-        let details = d3.select("#details");
-        details
-          .select("#total")
-          .text(`Total number of hate crimes: ${hateCrimes.length}`);
+        let details = d3.select("#details").style("visibility", "hidden");
         // details
-        //   .append("div")
-        //   .attr("id", "precinct")
-        //   .attr("x", 0)
-        //   .attr("y", 0)
-        //   .attr("fill", "black")
-        //   .text();
-
-        // details
-        //   .append("div")
-        //   .attr("id", "total")
-        //   .attr("x", 0)
-        //   .attr("y", 0)
-        //   .attr("fill", "black")
-        //   .text("");
+        //   .select("#total")
+        //   .text(`Total number of hate crimes: ${hateCrimes.length}`);
 
         // BEGINNING OF FUNCTIONS
 
@@ -564,28 +590,22 @@
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
 
-          let txt = d3.select("text#precinct");
+          // let txt = d3.select("text#precinct");
 
           // already selected
           if (selectedPrecinct === precinctNumber) {
+            // details.style("visibility", "hidden")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
             });
-            // selectedPrecincts = selectedPrecincts.filter(
-            //   (d) => d !== precinctNumber
-            // );
             selectedPrecinct = null;
-            // if (selectedPrecincts === []) {
-            txt.text("No selected precinct");
-            // } else {
-            // txt.text(`Selected Precincts: ${selectedPrecincts}`);
           } else if (selectedPrecinct === null) {
+            // details.style("visibility", "")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3);
             });
 
             selectedPrecinct = precinctNumber;
-            txt.text(`Selected Precinct: ${selectedPrecinct}`);
           } else {
             d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
@@ -594,53 +614,103 @@
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3);
             });
-
-            // selectedPrecincts.push(precinctNumber);
             selectedPrecinct = precinctNumber;
-            txt.text(`Selected Precinct: ${selectedPrecinct}`);
           }
 
           updateDetails();
         }
 
         function updateDetails() {
+          details.style("visibility", "")
           let txt = details.select("#precinct");
           let ttl = details.select("#total");
-          let filteredTtl = details.select("#filteredTotal");
+          let typeTtl = details.select("#typeTotal");
+          let timeTtl = details.select("#timeTotal");
+          let allTtl = details.select("#allTotal");
+
           if (selectedPrecinct === null) {
             selectedHateCrimes = hateCrimes;
             txt.text("No selected precinct");
             ttl.text(
-              `Total number of hate crimes: ${selectedHateCrimes.length}`
+              `Number of hate crimes: ${selectedHateCrimes.length}`
             );
+
             if (filteredType !== null) {
-              filteredTtl.text(
-                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
-                  filteredHateCrimes.length
+              typeTtl.text(
+                `Number of ${filteredType.toLowerCase()} hate crimes: ${
+                  hateCrimes.filter(d => d["Bias Motive Description"] == filteredType).length
                 }`
               );
             } else {
-              filteredTtl.text("");
+              typeTtl.text("");
+            }
+            if (time_start != min_date || time_end != max_date) {
+              timeTtl.text(
+                `Number of hate crimes in selected time range: ${
+                  hateCrimes.filter(d => d["Record Create Date"] >= time_start &&
+                  d["Record Create Date"] <= time_end).length
+                }`);
+            }
+            else {
+              timeTtl.text("");
+            }
+            if ((filteredType !== null) && (time_start != min_date || time_end != max_date)) {
+              allTtl.text(
+                `Number of ${filteredType.toLowerCase()} hate crimes in selected time range: ${
+                  hateCrimes.filter(d =>
+                    d["Bias Motive Description"] == filteredType &&
+                    d["Record Create Date"] >= time_start &&
+                    d["Record Create Date"] <= time_end).length}`);
+            }
+            else {
+              allTtl.text("");
             }
           } else {
+            txt.text(`Selected Precinct: ${selectedPrecinct}`);
             selectedHateCrimes = hateCrimes.filter(
               (d) => d.precinct == selectedPrecinct
             );
             ttl.text(
-              `Total number of hate crimes: ${selectedHateCrimes.length}`
+              `Number of hate crimes in precinct ${selectedPrecinct}: ${selectedHateCrimes.length}`
             );
-            selAndfil = filteredHateCrimes.filter(
-              (d) => d.precinct == selectedPrecinct
+            selAndfil = hateCrimes.filter(
+              (d) => d.precinct == selectedPrecinct && d["Bias Motive Description"] == filteredType
             );
+
             if (filteredType !== null) {
-              filteredTtl.text(
-                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
-                  selAndfil.length
+              typeTtl.text(
+                `Number of ${filteredType.toLowerCase()} hate crimes: ${
+                  hateCrimes.filter(d => d["Bias Motive Description"] == filteredType
+                  && d.precinct == selectedPrecinct).length
                 }`
               );
             } else {
-              filteredTtl.text("");
+              typeTtl.text("");
             }
+            if (time_start != min_date || time_end != max_date) {
+              timeTtl.text(
+                `Number of hate crimes in selected time range: ${
+                  hateCrimes.filter(d => d["Record Create Date"] >= time_start &&
+                  d["Record Create Date"] <= time_end &&
+                  d.precinct == selectedPrecinct).length
+                }`);
+            }
+            else {
+              timeTtl.text("");
+            }
+            if ((filteredType !== null) && (time_start != min_date || time_end != max_date)) {
+              allTtl.text(
+                `Number of ${filteredType.toLowerCase()} hate crimes in selected time range: ${
+                  hateCrimes.filter(d =>
+                    d["Bias Motive Description"] == filteredType &&
+                    d["Record Create Date"] >= time_start &&
+                    d["Record Create Date"] <= time_end &&
+                    d.precinct == selectedPrecinct).length}`);
+            }
+            else {
+              allTtl.text("");
+            }
+
           }
 
           displayBar();
@@ -667,8 +737,6 @@
 
         function updateDemographics() {
           if (showDemoButton.attr("clicked") === "true") {
-            console.log("updating");
-            console.log(filteredType);
             demoMap.selectAll("path.community").each(function (d) {
               if (filteredType === null) {
                 d3.select(this).attr("visibility", "");
@@ -692,6 +760,9 @@
               fil.style("background-color", "");
             });
 
+          details.style("visibility", "hidden");
+          canvas.select("g.brush").call(myBrush.move, null);
+
           filteredHateCrimes = hateCrimes;
           selectedHateCrimes = hateCrimes;
           filteredType = null;
@@ -704,21 +775,22 @@
 
         function filterClick() {
           let fil = d3.select(this);
-          filteredType = fil.attr("name");
-          console.log(filteredType);
+          if (fil.attr("clicked") == "true") {
+            console.log("true")
+            filteredType = null;
+            fil.attr("clicked", false)
+          }
+          else {
+            console.log("false")
+            filteredType = fil.attr("name");
+            fil.attr("clicked", true)
+          }
 
-          console.log("filter click");
           updateFiltered();
 
           makePath();
         }
-        // function removeActive(filteredtype) {
-        //   let activeButton = document.getElementsByClassName("active");
-        //   let activeType = document.getElementById(filteredtype);
-        //   if (activeButton != activeType) {
-        //     activeButton.classList.remove("active");
-        //   }
-        // }
+
         //update precincts based on filtered data
         function updateFiltered() {
 
@@ -726,7 +798,7 @@
             .each( function() {
             let fil = d3.select(this);
             if (fil.attr("name") == filteredType) {
-              fil.style("background-color", "red");
+              fil.style("background-color", "#ffc63d");
             }
             else {
               fil.style("background-color", "");
@@ -748,8 +820,6 @@
             );
           }
 
-          console.log("filtered hate crimes");
-          console.log(filteredHateCrimes);
           updateDemographics();
           updateDetails();
           updatePrecincts();
@@ -759,16 +829,14 @@
           //initialize hate crime frequency dictionary
           let precinctCrimeCount = {};
 
-          // updateFiltered();
           precincts.features.forEach((d) => {
             precinctCrimeCount[d.properties.precinct] = 0;
           });
-          //tabulates hatecrimes
+
           filteredHateCrimes.forEach((d) => {
             precinctCrimeCount[d.precinct] += 1;
           });
 
-          //need to figure out colorScale
           //update color scale
           colorScale
             .domain(Object.values(precinctCrimeCount))
@@ -786,8 +854,6 @@
 
           //update legend
           drawLegend(colorLegend, colorScale);
-          //put code updating here, assume dataset is filteredhatecrimes
-          // displayBar();
         }
 
         //creates a new dataset of only stuff from that precinct
@@ -901,7 +967,8 @@
             hateCrimeCount[r] = { type: r, number: 0 };
           });
 
-          selectedHateCrimes.forEach((d) => {
+          selectedHateCrimes.filter(d => d["Record Create Date"] >= time_start &&
+            d["Record Create Date"] <= time_end).forEach((d) => {
             if (hateCrimeTypes.includes(d["Bias Motive Description"])) {
               hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
             }
@@ -909,7 +976,6 @@
 
           var hateCountList = Object.values(hateCrimeCount);
           var dictLength = Object.values(hateCrimeCount).length;
-          console.log(hateCountList);
           const totalExtent = d3.extent(hateCountList, (d) => d["number"]);
 
           // y scale
@@ -964,6 +1030,7 @@
 
         updatePrecincts();
         updateDetails();
+        displayBar();
       };
 
       requestData();
