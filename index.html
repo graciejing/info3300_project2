@@ -4,6 +4,11 @@
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <script src="https://d3js.org/topojson.v2.min.js"></script>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Domine&display=swap');
+      body{
+        font-family: 'Domine', serif;
+        color: 	#0b405a;
+      }
       .area {
         stroke: royalblue;
         fill: skyblue;
@@ -11,11 +16,19 @@
       }
 
       #sidebar {
+        border: 2px solid #d05228	;
+        background: #BFD5E2;
         display: flex;
         flex-direction: column;
         text-align: center;
       }
+      #control{
+        background-color: #BFD5E2;
+      }
+      #details{
+        border: 2px solid #d05228	;
 
+      }
       .row {
         display: flex;
         flex-direction: row;
@@ -32,15 +45,13 @@
         display: block;
       }
 
-      .active {
-        background-color: red;
-      }
-
       #directions {
-        width: 200px;
         margin: 30px;
       }
-
+      #header{
+        padding: 10px;
+        border: 2px solid #d05228	;
+      }
       #legend {
         display: block;
         width: 100px;
@@ -62,6 +73,8 @@
       .col {
         display: flex;
         flex-direction: column;
+        border: 2px solid #d05228	;
+
       }
       body {
         margin: 30px;
@@ -77,13 +90,13 @@
   </head>
 
   <body>
-    <div class="row">
-      <h1>Hate Crimes in NYC</h1>
-      <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-      <p id="directions">
-        Directions: Filter data by changing the time parameters and race filters
-      </p>
-    </div>
+    <div id="directions">
+      <div id="header">
+    <h1>Hate Crimes in NYC</h1>
+    <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
+    <p>Directions: Filter data by changing the time parameters and race filters
+    </p>
+  </div>
     <div class="row">
       <div id="sidebar">
         <div id="filters"></div>
@@ -104,8 +117,10 @@
         <div class="row">
           <svg id="map" width="550" height="550"></svg>
           <div class="col">
-            <!-- <h4>Details:</h4> -->
+            <h4>Details:</h4>
             <div id="details">
+              <h4>Details:</h4>
+
               <div id="precinct">No selected precinct</div>
               <div id="total"></div>
               <div id="typeTotal"></div>
@@ -323,27 +338,32 @@
 
         let timeSliderHeight = 80;
         let timeSliderWidth = 900;
+        let axisLeftMargin = 20;
 
         let values = hateCrimes.map((d) => d["Record Create Date"]);
 
-        let formatTime = d3.timeFormat("%B %d, %Y");
+        let formatTimeMonth = d3.timeFormat("%B %Y");
+        let formatTimeDate = d3.timeFormat("%B %d %Y");
 
         let xScale = d3
           .scaleLinear()
           .domain([min_date, max_date])
           .range([10, timeSliderWidth - 10]);
-        let xAxis = d3.axisBottom(xScale).tickFormat(formatTime);
+        let xAxis = d3.axisBottom(xScale).tickFormat(formatTimeMonth);
 
         let wrapper = d3.select("#control");
         let canvas = wrapper
           .append("svg")
-          .attr("width", timeSliderWidth)
+          .attr("width", timeSliderWidth + 50)
           .attr("height", timeSliderHeight + 50);
 
         let areaLayer = canvas.append("g").attr("class", "areaLayer");
         canvas
           .append("g")
-          .attr("transform", `translate(0, ${timeSliderHeight})`)
+          .attr(
+            "transform",
+            `translate(${axisLeftMargin}, ${timeSliderHeight})`
+          )
           .attr("class", "x-axis")
           .call(xAxis);
 
@@ -371,16 +391,16 @@
         // console.log(counts);
 
         // y scale
+        let yExtent = d3.extent(counts, (d) => d.length);
         let freqScale = d3
           .scaleLinear()
-          .domain(d3.extent(counts, (d) => d.length))
+          .domain(yExtent)
           .range([timeSliderHeight, 4]);
         let yAxis = d3.axisLeft(freqScale);
 
-        canvas.append("g").attr("class", "yAxis");
         canvas
           .append("g")
-          .attr("transform", `translate(-10, 0)`)
+          .attr("transform", `translate(${axisLeftMargin}, 0)`)
           .attr("class", "y-axis")
           .call(yAxis);
 
@@ -394,24 +414,29 @@
         areaLayer
           .append("path")
           .datum(counts)
-          // .attr("transform", `translate(0, -50)`)
+          .attr("transform", `translate(${axisLeftMargin}, -${yExtent[0]})`)
           .attr("class", "area")
           .attr("d", area);
 
-        let brush = d3
+        let myBrush = d3
           .brushX()
           .extent([
             [10, 0],
-            [timeSliderWidth - 10, timeSliderHeight],
+            [timeSliderWidth - axisLeftMargin - 10, timeSliderHeight],
           ])
           .on("brush end", brushMoved);
 
         let filterFunc = (d) => true;
+        // integer of time scale range
         var time_start = min_date;
         var time_end = max_date;
 
+        // date object of time scale range
+        var display_time_start = time_start;
+        var display_time_end = time_end;
+
         function brushMoved(event) {
-          // console.log(event.type, event.selection, event);
+          console.log(event.type, event.selection, event);
 
           if (event.selection !== null) {
             let startPixels = event.selection[0];
@@ -426,21 +451,21 @@
 
             time_start = start;
             time_end = end;
-            // console.log("subset time");
-            // console.log(time_start);
-            // console.log(time_end);
+            
+            display_time_start = formatTimeDate(new Date(time_start));
+            display_time_end = formatTimeDate(new Date(time_end));
           } else {
             filterFunc = (d) => true;
             time_start = min_date;
             time_end = max_date;
+            display_time_start = formatTimeDate(time_start);
+            display_time_end = formatTimeDate(time_end);
           }
           // console.log("update hate crime data");
           // updateHateCrimeData(filterFunc, hateCrimes);
 
-          // console.log("scaled time in brush moved");
-          // console.log(time_start);
-          // console.log(time_end);
           updateFiltered();
+          console.log("remove brush");
         }
 
         function updateHateCrimeData(filterFunc, hateCrimes) {
@@ -450,7 +475,7 @@
           return filteredHateCrimes;
         }
 
-        canvas.append("g").attr("class", "brush").call(brush);
+        canvas.append("g").attr("class", "brush").call(myBrush);
 
         //creating legends
         const legendarea = d3.select("svg#demolegend");
@@ -710,13 +735,12 @@
             .each( function() {
             let fil = d3.select(this);
             if (fil.attr("name") == filteredType) {
-              fil.style("background-color", "red");
+              fil.style("background-color", "#B1B5C8");
             }
             else {
               fil.style("background-color", "");
             }
           });
-
 
           if (filteredType !== null) {
             filteredHateCrimes = hateCrimes.filter(
