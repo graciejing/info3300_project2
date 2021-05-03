@@ -25,14 +25,13 @@
         width: 225px;
       }
       #control{
-        padding: 15px;
         background-color: #ffcebf;
       }
       #details{
         border: 2px solid #d05228	;
         padding: 20px;
       }
-      #detailscolor{
+      .detailscolor{
         background-color: #ffcebf;
 
         border: 2px solid #d05228	;
@@ -119,14 +118,16 @@
     </p>
   </div>
     <div class="row">
-      <div id="sidebar">
+      <div id="sidebar" class="detailscolor">
+        <h4>Filter Data by Race</h4>
         <div id="filters"></div>
         <div id="legend"></div>
+        <h4>Overlay with Main Demographic per Community District</h4>
         <svg id="demolegend"></svg>
         <button id="demographic">Show Demographic Overlay</button>
       </div>
       <div class="col">
-        <div id = "detailscolor">
+        <div class = "detailscolor">
         <h4>Time Scrubber & Hate Crimes over time Related to Race Filters</h4>
         <p>Narrow the dataset according to time ranges as well with the line graph.</p>
         <div id="control"></div>
@@ -360,7 +361,7 @@
 
         //create time slider
 
-        let timeSliderHeight = 80;
+        let timeSliderHeight = 70;
         let timeSliderWidth = 900;
         let axisLeftMargin = 20;
 
