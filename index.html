@@ -333,9 +333,9 @@
             .append("button")
             .attr("name", d)
             .attr("id", d)
-            // .attr("type", "checkbox")
             .attr("class", "type")
             .attr("param", "Bias Motive Description")
+            .attr("clicked", false)
             .text(d)
             .on("click", filterClick);
         });
@@ -384,8 +384,7 @@
         let time_spacing = counts[1].x1 - counts[1].x0;
 
         counts[0].x0 = counts[0].x1 - time_spacing;
-        counts[counts.length - 1].x1 =
-          counts[counts.length - 1].x0 + time_spacing;
+        counts[counts.length - 1].x1 = counts[counts.length - 1].x0 + time_spacing;
 
         counts.unshift({
           x0: 0,
@@ -565,13 +564,13 @@
 
           // already selected
           if (selectedPrecinct === precinctNumber) {
-            details.style("visibility", "hidden")
+            // details.style("visibility", "hidden")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
             });
             selectedPrecinct = null;
           } else if (selectedPrecinct === null) {
-            details.style("visibility", "")
+            // details.style("visibility", "")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3);
             });
@@ -592,41 +591,57 @@
         }
 
         function updateDetails() {
+          details.style("visibility", "")
           let txt = details.select("#precinct");
           let ttl = details.select("#total");
           let typeTtl = details.select("#typeTotal");
           let timeTtl = details.select("#timeTotal");
           let allTtl = details.select("#allTotal");
+
           if (selectedPrecinct === null) {
             selectedHateCrimes = hateCrimes;
             txt.text("No selected precinct");
-            ttl.text(`Total number of hate crimes: ${selectedHateCrimes.length}`);
-            // if (filteredType !== null) {
-            //   typeTtl.text(
-            //     `Total number of ${filteredType.toLowerCase()} hate crimes: ${
-            //       hateCrimes.filter(d => d["Bias Motive Description"] == filteredType).length
-            //     }`
-            //   );
-            // } else {
-            //   typeTtl.text("");
-            // }
-            // if (time_start != min_date || time_end != max_date) {
-            //   timeTtl.text(
-            //     `Total number of hate crimes in selected time range: ${
-            //       hateCrimes.filter(d => d["Record Create Date"] >= time_start &&
-            //       d["Record Create Date"] <= time_end).length
-            //     }`
-            // }
-            // else {
-            //   timeTtl.text("");
-            // }
+            ttl.text(
+              `Number of hate crimes: ${selectedHateCrimes.length}`
+            );
+
+            if (filteredType !== null) {
+              typeTtl.text(
+                `Number of ${filteredType.toLowerCase()} hate crimes: ${
+                  hateCrimes.filter(d => d["Bias Motive Description"] == filteredType).length
+                }`
+              );
+            } else {
+              typeTtl.text("");
+            }
+            if (time_start != min_date || time_end != max_date) {
+              timeTtl.text(
+                `Number of hate crimes in selected time range: ${
+                  hateCrimes.filter(d => d["Record Create Date"] >= time_start &&
+                  d["Record Create Date"] <= time_end).length
+                }`);
+            }
+            else {
+              timeTtl.text("");
+            }
+            if ((filteredType !== null) && (time_start != min_date || time_end != max_date)) {
+              allTtl.text(
+                `Number of ${filteredType.toLowerCase()} hate crimes in selected time range: ${
+                  hateCrimes.filter(d =>
+                    d["Bias Motive Description"] == filteredType &&
+                    d["Record Create Date"] >= time_start &&
+                    d["Record Create Date"] <= time_end).length}`);
+            }
+            else {
+              allTtl.text("");
+            }
           } else {
             txt.text(`Selected Precinct: ${selectedPrecinct}`);
             selectedHateCrimes = hateCrimes.filter(
               (d) => d.precinct == selectedPrecinct
             );
             ttl.text(
-              `Number of hate crimes: ${selectedHateCrimes.length}`
+              `Number of hate crimes in precinct ${selectedPrecinct}: ${selectedHateCrimes.length}`
             );
             selAndfil = hateCrimes.filter(
               (d) => d.precinct == selectedPrecinct && d["Bias Motive Description"] == filteredType
@@ -665,8 +680,6 @@
             else {
               allTtl.text("");
             }
-
-
 
           }
 
@@ -718,6 +731,7 @@
             });
 
           details.style("visibility", "hidden");
+          canvas.select("g.brush").call(myBrush.move, null);
 
           filteredHateCrimes = hateCrimes;
           selectedHateCrimes = hateCrimes;
@@ -730,7 +744,17 @@
 
         function filterClick() {
           let fil = d3.select(this);
-          filteredType = fil.attr("name");
+          if (fil.attr("clicked") == "true") {
+            console.log("true")
+            filteredType = null;
+            fil.attr("clicked", false)
+          }
+          else {
+            console.log("false")
+            filteredType = fil.attr("name");
+            fil.attr("clicked", true)
+          }
+
           updateFiltered();
         }
 
