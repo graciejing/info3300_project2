@@ -14,7 +14,6 @@
         display: flex;
         flex-direction: column;
         text-align: center;
-        width: 100px;
       }
 
       .row {
@@ -23,13 +22,8 @@
       }
 
       #filters {
-        position: absolute;
-        top: 200px;
-        left: 20px;
         display: block;
         text-align: center;
-        margin: auto;
-        width: 300px;
       }
 
       button {
@@ -43,17 +37,17 @@
       }
 
       #directions {
-        width: 200px;
         margin: 30px;
       }
 
       #legend {
+        display: block;
         width: 100px;
       }
 
       #colorlegend {
         position: absolute;
-        top: 200px;
+        top: 300px;
         left: 230px;
       }
 
@@ -68,43 +62,59 @@
         display: flex;
         flex-direction: column;
       }
+      body {
+        margin: 30px;
+      }
+      .gridlines line {
+        stroke: #bbb;
+      }
+
+      .gridlines .domain {
+        stroke: none;
+      }
     </style>
   </head>
 
   <body>
+    <div id="directions">
+
+    <h1>Hate Crimes in NYC</h1>
+    <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
+    <p>Directions: Filter data by changing the time parameters and race filters
+    </p>
     <div class="row">
-      <h1>Hate Crimes in NYC</h1>
-      <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-    </div>
-    <div class="row">
-      <p id="directions">
-        Directions: Filter data by changing the time parameters and race filters
-      </p>
-      <div id="control"></div>
-    </div>
-    <div id="sidebar">
-      <div id="filters"></div>
-    </div>
-    <div class="row">
-      <svg id="map" width="800" height="500"></svg>
+      <div id="sidebar">
+        <div id="filters"></div>
+        <div id="legend"></div>
+        <svg id="demolegend"></svg>
+        <button id="demographic">Show Demographic Overlay</button>
+      </div>
       <div class="col">
-        <h4>Details:</h4>
-        <div id="details"></div>
-        <svg id="bar" width="500" height="400"></svg>
+        <div id="control"></div>
+        <div id="colorlegend">
+          <svg
+            id="colorLegend"
+            height="70"
+            width="300"
+            style="background: #fff; margin-left: 30px"
+          ></svg>
+        </div>
+        <div class="row">
+          <svg id="map" width="550" height="550"></svg>
+          <div class="col">
+            <h4>Details:</h4>
+            <div id="details">
+              <div id="precinct">No selected precinct</div>
+              <div id="total"></div>
+              <div id="filteredTotal"></div>
+            </div>
+            <svg id="bar" width="500" height="400"></svg>
+          </div>
+        </div>
       </div>
     </div>
-    <div id="colorlegend">
-      <svg
-        id="colorLegend"
-        height="70"
-        width="300"
-        style="background: #fff; margin-top: 30px"
-      ></svg>
-    </div>
-    <div id="overlay">
-      <div id="legend"></div>
-      <button id="demographic">Show Demographic Overlay</button>
-    </div>
+
+    <div id="overlay"></div>
 
     <!-- <svg id="linegraph" width="1000" height="800"></svg> -->
 
@@ -114,23 +124,15 @@
       const linegraph = d3.select("svg#linegraph");
       const width = svg.attr("width");
       const height = svg.attr("height");
-      const margin = { top: 40, right: 20, bottom: 20, left: 200 };
-
       //precinct map
-      const mapWidth = width - margin.left - margin.right;
-      const mapHeight = height - margin.top - margin.bottom;
-      const map = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const mapWidth = width;
+      const mapHeight = height;
+      const map = svg.append("g");
 
       //demographic map
-      const demoMap = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const demoMap = svg.append("g");
 
-      const outlines = svg
-        .append("g")
-        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      const outlines = svg.append("g");
 
       const requestData = async function () {
         // a CSV dataset of NYPD hate crimes
@@ -276,6 +278,11 @@
           other: "ANTI-OTHER ETHNICITY",
           twoplus: "ANTI-MULTI-RACIAL GROUPS",
         };
+
+        const crimeToDemo = {};
+        for (let key in demoToCrime) {
+          crimeToDemo[demoToCrime[key]] = key;
+        }
 
         // create filters
         let filters = d3.select("#filters");
@@ -457,17 +464,47 @@
         canvas.append("g").attr("class", "brush").call(myBrush);
 
         //creating legends
-        let demoLegend = d3
-          .select("#legend")
+        const legendarea = d3.select("svg#demolegend");
+
+        let demoLegend = legendarea
           .append("g")
-          .attr("id", "demoLegend");
-        races.forEach((r) => {
-          demoLegend.append("span").text(r).style("color", demoScale(r));
-        });
+          .attr("class", "legend")
+          .attr("transform", "translate(" + 10 + ", 10)");
+
         demoLegend
-          .append("span")
-          .text("no demographic data")
-          .style("color", demoScale(null));
+          .selectAll("rect")
+          .data(races)
+          .enter()
+          .append("rect")
+          .attr("x", 0)
+          .attr("y", function (d, i) {
+            return i * 18;
+          })
+          .attr("width", 12)
+          .attr("height", 12)
+          .attr("fill", function (d, i) {
+            return demoScale(d);
+          });
+
+        demoLegend
+          .selectAll("text")
+          .data(races)
+          .enter()
+          .append("text")
+          .text(function (d) {
+            if (d === null) {
+              return "no demographic data";
+            } else {
+              return d;
+            }
+          })
+          .attr("x", 18)
+          .attr("y", function (d, i) {
+            return i * 18;
+          })
+          .attr("id", "label")
+          .attr("text-anchor", "start")
+          .attr("alignment-baseline", "hanging");
 
         let colorLegend = d3.select("#colorLegend");
         colorLegend.append("g").attr("class", "colorbar axis");
@@ -475,22 +512,24 @@
 
         //adding details for precinct on click
         let details = d3.select("#details");
-
         details
-          .append("text")
-          .attr("id", "precinct")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("fill", "black")
-          .text("No selected precincts");
+          .select("#total")
+          .text(`Total number of hate crimes: ${hateCrimes.length}`);
+        // details
+        //   .append("div")
+        //   .attr("id", "precinct")
+        //   .attr("x", 0)
+        //   .attr("y", 0)
+        //   .attr("fill", "black")
+        //   .text();
 
-        details
-          .append("text")
-          .attr("id", "total")
-          .attr("x", 0)
-          .attr("y", 0)
-          .attr("fill", "black")
-          .text("");
+        // details
+        //   .append("div")
+        //   .attr("id", "total")
+        //   .attr("x", 0)
+        //   .attr("y", 0)
+        //   .attr("fill", "black")
+        //   .text("");
 
         let filteredType = null;
         let filteredHateCrimes = hateCrimes;
@@ -557,28 +596,45 @@
         }
 
         function updateDetails() {
-          let txt = d3.select("text#precinct");
-          let ttl = details.select("text#total");
+          let txt = details.select("#precinct");
+          let ttl = details.select("#total");
+          let filteredTtl = details.select("#filteredTotal");
           if (selectedPrecinct === null) {
             selectedHateCrimes = hateCrimes;
-
             txt.text("No selected precinct");
             ttl.text(
-              `Total Number of Hate Crimes: ${selectedHateCrimes.length}`
+              `Total number of hate crimes: ${selectedHateCrimes.length}`
             );
+            if (filteredType !== null) {
+              filteredTtl.text(
+                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
+                  filteredHateCrimes.length
+                }`
+              );
+            } else {
+              filteredTtl.text("");
+            }
           } else {
-            console.log("here");
-            selectedHateCrimes = hateCrimes.filter((d) => {
-              return d.precinct == selectedPrecinct;
-            });
-
-            console.log(selectedHateCrimes);
-            // console.log(`${selectedHateCrimes}`)
-
-            ttl.text(
-              `Total Number of Hate Crimes: ${selectedHateCrimes.length}`
+            selectedHateCrimes = hateCrimes.filter(
+              (d) => d.precinct == selectedPrecinct
             );
+            ttl.text(
+              `Total number of hate crimes: ${selectedHateCrimes.length}`
+            );
+            selAndfil = filteredHateCrimes.filter(
+              (d) => d.precinct == selectedPrecinct
+            );
+            if (filteredType !== null) {
+              filteredTtl.text(
+                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
+                  selAndfil.length
+                }`
+              );
+            } else {
+              filteredTtl.text("");
+            }
           }
+
           displayBar();
         }
 
@@ -601,15 +657,38 @@
           }
         }
 
+        function updateDemographics() {
+          if (showDemoButton.attr("clicked") === "true") {
+            console.log("updating");
+            console.log(filteredType);
+            demoMap.selectAll("path.community").each(function (d) {
+              if (filteredType === null) {
+                d3.select(this).attr("visibility", "");
+              } else if (demoToCrime[getDomDemo(d)] === filteredType) {
+                d3.select(this).attr("visibility", "");
+              } else {
+                d3.select(this).attr("visibility", "hidden");
+              }
+            });
+          }
+        }
+
         function clear() {
           d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
             d3.select(this).attr("stroke-width", "1");
           });
 
+          d3.selectAll(".type")
+            .each( function() {
+              let fil = d3.select(this);
+              fil.style("background-color", "");
+            });
+
           filteredHateCrimes = hateCrimes;
           selectedHateCrimes = hateCrimes;
           filteredType = null;
           selectedPrecinct = null;
+          updateDemographics();
           updateDetails();
           updatePrecincts();
         }
@@ -622,9 +701,27 @@
           console.log("filter click");
           updateFiltered();
         }
-
+        // function removeActive(filteredtype) {
+        //   let activeButton = document.getElementsByClassName("active");
+        //   let activeType = document.getElementById(filteredtype);
+        //   if (activeButton != activeType) {
+        //     activeButton.classList.remove("active");
+        //   }
+        // }
         //update precincts based on filtered data
         function updateFiltered() {
+
+          d3.selectAll(".type")
+            .each( function() {
+            let fil = d3.select(this);
+            if (fil.attr("name") == filteredType) {
+              fil.style("background-color", "red");
+            }
+            else {
+              fil.style("background-color", "");
+            }
+          });
+
           if (filteredType !== null) {
             filteredHateCrimes = hateCrimes.filter(
               (d) =>
@@ -642,6 +739,7 @@
 
           console.log("filtered hate crimes");
           console.log(filteredHateCrimes);
+          updateDemographics();
           updateDetails();
           updatePrecincts();
         }
@@ -757,7 +855,18 @@
           .call(bottomAxis);
 
         let leftAxis = d3.axisLeft();
+        let leftGridlines = d3
+          .axisLeft()
+          .tickSize(-barChartWidth - 10)
+          .tickFormat("");
         let leftAxisG = annotations
+          .append("g")
+          .attr("class", "y axis")
+          .attr(
+            "transform",
+            `translate(${barMargin.left - 10},${barMargin.top})`
+          );
+        let leftGridlinesG = annotations
           .append("g")
           .attr("class", "y gridlines")
           .attr(
@@ -800,6 +909,8 @@
 
           leftAxis.scale(countScale);
           leftAxisG.transition().call(leftAxis);
+          leftGridlines.scale(countScale);
+          leftGridlinesG.transition().call(leftGridlines);
           // leftAxis = d3.axisLeft(countScale);
           // leftGridlines = d3
           //   .axisLeft(countScale)
@@ -807,15 +918,15 @@
           //   .tickFormat("");
           // annotations.call(leftAxis);
           // annotations.call(leftGridlines);
-          var colorScale = d3
-            .scaleOrdinal(d3.schemeCategory10)
-            .domain(hateCrimeTypes);
+          // var colorScale = d3
+          //   .scaleOrdinal(d3.schemeCategory10)
+          //   .domain(hateCrimeTypes);
           chartArea
             .selectAll("rect.bar")
             .data(hateCountList)
             .join("rect")
             .attr("class", "bar")
-            .attr("fill", "steelblue")
+            .attr("fill", (d) => demoScale(crimeToDemo[d["type"]]))
             .attr("x", (d) => crimeScale(d["type"]))
             .attr("y", (d) => countScale(d["number"]))
             .attr("height", (d) => countScale(0) - countScale(d["number"]))
@@ -856,7 +967,7 @@
         const legendWidth = legend.attr("width");
         const legendHeight = legend.attr("height");
         const legendMinMax = d3.extent(legendColorScale.domain()); // way to recover the minMax from most kinds of scales
-        const barHeight = 40;
+        const barHeight = 20;
         const stepSize = 4; // warning, not using a canvas element so lots of rect tags will be created for low stepSize, causing issues with performance
         // Extend the minmax by 1 in either direction to expose more features
         const pixelScale = d3
