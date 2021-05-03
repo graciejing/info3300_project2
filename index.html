@@ -116,8 +116,18 @@
       <div id="header">
     <h1>Hate Crimes in NYC</h1>
     <p>By: Gracie Jing (kgj7), Connie Liu (cl2264), Olivia Zhu (oz28)</p>
-    <p>Directions: Filter data by changing the time parameters and race filters
-    </p>
+    <p>Directions: Filter data by changing the time parameters and race filters</p>
+    <p>This visualization was designed to help users identify the frequency of hate
+      crimes across New York City. We want to focus on racially-based hate crimes, so
+      the user can choose to filter by a specific type of anti-race hate crime. To
+      visualize change across time, the user may also select specific ranges of time
+      to examine. To see demographic data, the user can choose to show
+      the demographic overlay, which will show the main demographic of each area. When
+      a filter is selected this will only indicate the areas of that selected demographic.
+      Since the demographic overlay still shows the choropleth map of frequency of
+      hate crimes in each precinct, the user can see if there are may be certain relationships
+      where one area that is mainly a certain race has a high amount of that same race's hate
+      crimes, or if an area of mainly a certain race has been targeting a different race.
   </div>
     <div class="row">
       <div id="sidebar" class="detailscolor">
@@ -860,43 +870,6 @@
 
           //update legend
           drawLegend(colorLegend, colorScale);
-        }
-
-        //creates a new dataset of only stuff from that precinct
-        //use filterdhatecrimes+ hatecrimetypes
-        //white {type: white number: 20}, black {type: white number: 20}
-        function wrap(text, width) {
-          text.each(function () {
-            var text = d3.select(this),
-              words = text.text().split(/\s+/).reverse(),
-              word,
-              line = [],
-              lineNumber = 0,
-              lineHeight = 1.1, // ems
-              y = text.attr("y"),
-              dy = parseFloat(text.attr("dy")),
-              tspan = text
-                .text(null)
-                .append("tspan")
-                .attr("x", 0)
-                .attr("y", y)
-                .attr("dy", dy + "em");
-            while ((word = words.pop())) {
-              line.push(word);
-              tspan.text(line.join(" "));
-              if (tspan.node().getComputedTextLength() > width) {
-                line.pop();
-                tspan.text(line.join(" "));
-                line = [word];
-                tspan = text
-                  .append("tspan")
-                  .attr("x", 0)
-                  .attr("y", y)
-                  .attr("dy", ++lineNumber * lineHeight + dy + "em")
-                  .text(word);
-              }
-            }
-          });
         }
 
         // CREATE BAR CHART
