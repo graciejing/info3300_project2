@@ -318,13 +318,96 @@
           // crimeFilter.append("label").attr("for", d).text(d);
         });
 
+        let filteredType = null;
+        let filteredHateCrimes = hateCrimes;
+        let selectedPrecinct = null;
+        let selectedHateCrimes = hateCrimes;
+
         //create time slider
 
         let timeSliderHeight = 80;
         let timeSliderWidth = 900;
-        let axisLeftMargin = 20;
+        let axisLeftMargin = 25;
 
-        let values = hateCrimes.map((d) => d["Record Create Date"]);
+        // integer of time scale range
+        var time_start = min_date;
+        var time_end = max_date;
+
+        // date object of time scale range
+        var display_time_start = time_start;
+        var display_time_end = time_end;
+        
+        function makePath() {
+          let values = hateCrimes;
+          if (filteredType !== null) {
+            values = hateCrimes.filter(
+              (d) =>
+                d["Bias Motive Description"] === filteredType
+            );
+          }
+          
+          values = values.map(d => d["Record Create Date"]);
+
+          let numBins = 30;
+          let histoGen = d3
+            .histogram()
+            .domain([min_date, max_date])
+            .thresholds(numBins);
+
+          let counts = histoGen(values);
+
+          let time_spacing = counts[1].x1 - counts[1].x0;
+
+          counts[0].x0 = counts[0].x1 - time_spacing;
+          counts[counts.length - 1].x1 =
+            counts[counts.length - 1].x0 + time_spacing;
+
+          counts.unshift({
+            x0: 0,
+            x1: counts[0].x0,
+            length: counts[0].length,
+            
+          });
+
+          console.log("counts");
+          console.log(counts);
+
+          // y scale
+          let yExtent = d3.extent(counts, (d) => d.length);
+          let freqScale = d3
+            .scaleLinear()
+            .domain(yExtent)
+            .range([timeSliderHeight, 4]);
+          let yAxis = d3.axisLeft(freqScale).ticks(5);
+
+          canvas.select(".y-axis").remove();
+
+          canvas
+            .append("g")
+            .attr("transform", `translate(${axisLeftMargin}, 0)`)
+            .attr("class", "y-axis")
+            .call(yAxis);
+
+          let area = d3
+            .area()
+            .x((d) => xScale(d.x1) + 10)
+            .y0(freqScale(0))
+            .y1((d) => freqScale(d.length));;
+            // .curve(d3.curveNatural);
+
+          canvas.select(".areaLayer").remove();
+
+          areaLayer = canvas.append("g").attr("class", "areaLayer");
+
+          areaLayer
+            .append("path")
+            .datum(counts)
+            .attr("transform", `translate(${axisLeftMargin}, -${yExtent[0]})`)
+            .attr("class", "area")
+            .attr("d", area);
+
+            areaLayer.lower();
+        }
 
         let formatTimeMonth = d3.timeFormat("%B %Y");
         let formatTimeDate = d3.timeFormat("%B %d %Y");
@@ -351,73 +434,16 @@
           .attr("class", "x-axis")
           .call(xAxis);
 
-        let numBins = 30;
-        let histoGen = d3
-          .histogram()
-          .domain([min_date, max_date])
-          .thresholds(numBins);
-
-        let counts = histoGen(values);
-
-        let time_spacing = counts[1].x1 - counts[1].x0;
-
-        counts[0].x0 = counts[0].x1 - time_spacing;
-        counts[counts.length - 1].x1 =
-          counts[counts.length - 1].x0 + time_spacing;
-
-        counts.unshift({
-          x0: 0,
-          x1: counts[0].x0,
-          length: counts[0].length,
-        });
-
-        console.log("counts");
-        console.log(counts);
-
-        // y scale
-        let yExtent = d3.extent(counts, (d) => d.length);
-        let freqScale = d3
-          .scaleLinear()
-          .domain(yExtent)
-          .range([timeSliderHeight, 4]);
-        let yAxis = d3.axisLeft(freqScale);
-
-        canvas
-          .append("g")
-          .attr("transform", `translate(${axisLeftMargin}, 0)`)
-          .attr("class", "y-axis")
-          .call(yAxis);
-
-        let area = d3
-          .area()
-          .x((d) => xScale(d.x1))
-          .y0(freqScale(0))
-          .y1((d) => freqScale(d.length))
-          .curve(d3.curveNatural);
-
-        areaLayer
-          .append("path")
-          .datum(counts)
-          .attr("transform", `translate(${axisLeftMargin}, -${yExtent[0]})`)
-          .attr("class", "area")
-          .attr("d", area);
-
-        let myBrush = d3
+          let myBrush = d3
           .brushX()
           .extent([
-            [10, 0],
-            [timeSliderWidth - axisLeftMargin - 10, timeSliderHeight],
+            [10 + axisLeftMargin, 0],
+            [timeSliderWidth + 20, timeSliderHeight],
           ])
           .on("brush end", brushMoved);
 
-        let filterFunc = (d) => true;
-        // integer of time scale range
-        var time_start = min_date;
-        var time_end = max_date;
+        makePath();
 
-        // date object of time scale range
-        var display_time_start = time_start;
-        var display_time_end = time_end;
         function brushMoved(event) {
           console.log(event.type, event.selection, event);
 
@@ -444,21 +470,8 @@
             display_time_start = formatTimeDate(time_start);
             display_time_end = formatTimeDate(time_end);
           }
-          // console.log("update hate crime data");
-          // updateHateCrimeData(filterFunc, hateCrimes);
 
-          console.log("scaled time in brush moved");
-          console.log(display_time_start);
-          console.log(display_time_end);
           updateFiltered();
-          console.log("remove brush");
-        }
-
-        function updateHateCrimeData(filterFunc, hateCrimes) {
-          let filteredHateCrimes = hateCrimes.filter((d) => filterFunc(d));
-
-          console.log(filteredHateCrimes);
-          return filteredHateCrimes;
         }
 
         canvas.append("g").attr("class", "brush").call(myBrush);
@@ -530,11 +543,6 @@
         //   .attr("y", 0)
         //   .attr("fill", "black")
         //   .text("");
-
-        let filteredType = null;
-        let filteredHateCrimes = hateCrimes;
-        let selectedPrecinct = null;
-        let selectedHateCrimes = hateCrimes;
 
         // BEGINNING OF FUNCTIONS
 
@@ -691,6 +699,7 @@
           updateDemographics();
           updateDetails();
           updatePrecincts();
+          makePath();
         }
 
         function filterClick() {
@@ -700,6 +709,8 @@
 
           console.log("filter click");
           updateFiltered();
+
+          makePath();
         }
         // function removeActive(filteredtype) {
         //   let activeButton = document.getElementsByClassName("active");
