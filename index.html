@@ -10,20 +10,22 @@
         color: 	#0b405a;
       }
       .area {
-        stroke: royalblue;
-        fill: skyblue;
+        stroke: #d05228;
+        fill: white;
         stroke-width: 2px;
       }
 
       #sidebar {
         border: 2px solid #d05228	;
-        background: #BFD5E2;
+        background: #ffcebf;
         display: flex;
         flex-direction: column;
         text-align: center;
+        width: 225px;
       }
       #control{
-        background-color: #BFD5E2;
+        padding: 20px;
+        background-color: #ffcebf;
       }
       #details{
         border: 2px solid #d05228	;
@@ -43,6 +45,9 @@
         padding: 5px;
         margin: 10px;
         display: block;
+        border: #d05228 solid 2px;
+        color:#d05228;
+        background-color: white;
       }
 
       #directions {
@@ -731,7 +736,7 @@
             .each( function() {
             let fil = d3.select(this);
             if (fil.attr("name") == filteredType) {
-              fil.style("background-color", "#B1B5C8");
+              fil.style("background-color", "#ffc63d");
             }
             else {
               fil.style("background-color", "");
