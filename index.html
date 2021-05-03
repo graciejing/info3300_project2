@@ -117,7 +117,6 @@
         <div class="row">
           <svg id="map" width="550" height="550"></svg>
           <div class="col">
-            <h4>Details:</h4>
             <div id="details">
               <h4>Details:</h4>
 
@@ -330,8 +329,6 @@
             .attr("param", "Bias Motive Description")
             .text(d)
             .on("click", filterClick);
-
-          // crimeFilter.append("label").attr("for", d).text(d);
         });
 
         //create time slider
@@ -362,7 +359,7 @@
           .append("g")
           .attr(
             "transform",
-            `translate(${axisLeftMargin}, ${timeSliderHeight})`
+            `translate(${axisLeftMargin}, ${timeSliderHeight + 15})`
           )
           .attr("class", "x-axis")
           .call(xAxis);
@@ -451,7 +448,7 @@
 
             time_start = start;
             time_end = end;
-            
+
             display_time_start = formatTimeDate(new Date(time_start));
             display_time_end = formatTimeDate(new Date(time_end));
           } else {
