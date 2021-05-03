@@ -17,25 +17,27 @@
       }
 
       #sidebar {
-        border: 2px solid #d05228	;
+        border-right: 2px solid #d05228	;
         background: #ffcebf;
         display: flex;
         flex-direction: column;
-        text-align: center;
+        text-align: left;
         width: 225px;
       }
       #control{
-        padding: 15px;
         background-color: #ffcebf;
       }
       #details{
-        border: 2px solid #d05228	;
         padding: 20px;
       }
-      #detailscolor{
+      #detailscss{
+        text-align: left;
+        padding: 20px;
+      }
+      .detailscolor{
         background-color: #ffcebf;
 
-        border: 2px solid #d05228	;
+        border-bottom: 2px solid #d05228	;
         padding: 20px;
       }
       .row {
@@ -71,7 +73,7 @@
       } */
       #header{
         padding: 10px;
-        border: 2px solid #d05228	;
+        border-bottom: 2px solid #d05228	;
       }
       #legend {
         display: block;
@@ -80,8 +82,8 @@
 
       #colorlegend {
         position: absolute;
-        bottom: 100px;
-        left: 230px;
+        top: 1000px;
+        left: 500px;
       }
 
       #overlay {
@@ -94,11 +96,10 @@
       .col {
         display: flex;
         flex-direction: column;
-        border: 2px solid #d05228	;
-
       }
       body {
-        margin: 30px;
+        margin: 20px;
+        padding: 30px;
       }
       .gridlines line {
         stroke: #bbb;
@@ -119,29 +120,23 @@
     </p>
   </div>
     <div class="row">
-      <div id="sidebar">
+      <div id="sidebar" class="detailscolor">
+        <h4>Filter Data by Race</h4>
         <div id="filters"></div>
         <div id="legend"></div>
+        <h4>Overlay with Main Demographic per Community District</h4>
         <svg id="demolegend"></svg>
         <button id="demographic">Show Demographic Overlay</button>
       </div>
       <div class="col">
-        <div id = "detailscolor">
+        <div class = "detailscolor">
         <h4>Time Scrubber & Hate Crimes over time Related to Race Filters</h4>
         <p>Narrow the dataset according to time ranges as well with the line graph.</p>
         <div id="control"></div>
       </div>
-        <div id="colorlegend">
-          <svg
-            id="colorLegend"
-            height="70"
-            width="300"
-            style="background: #fff; margin-left: 30px"
-          ></svg>
-        </div>
         <div class="row">
           <div class="col">
-            <div id="details">
+            <div id="detailscss">
           <h4>Frequency of Hate Crimes Per Police Precinct</h4>
           <svg id="map" width="550" height="550"></svg>
         </div>
@@ -155,12 +150,22 @@
               <div id="timeTotal"></div>
               <div id="allTotal"></div>
             </div>
-            <div id ="details">
+            <div id ="detailscss">
             <h4>Number of Hate Crimes Reported per Category related to Precincts and Time Filters</h4>
             <svg id="bar" width="500" height="400"></svg>
           </div>
           </div>
+          
         </div>
+        
+      </div>
+      <div id="colorlegend">
+        <svg
+          id="colorLegend"
+          height="70"
+          width="300"
+          style="background: #fff; margin-left: 30px"
+        ></svg>
       </div>
     </div>
 
@@ -366,7 +371,7 @@
 
         //create time slider
 
-        let timeSliderHeight = 80;
+        let timeSliderHeight = 70;
         let timeSliderWidth = 900;
         let axisLeftMargin = 25;
 
