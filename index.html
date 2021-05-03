@@ -110,6 +110,7 @@
               <div id="total"></div>
               <div id="typeTotal"></div>
               <div id="timeTotal"></div>
+              <div id="allTotal"></div>
             </div>
             <svg id="bar" width="500" height="400"></svg>
           </div>
@@ -563,11 +564,12 @@
           let txt = details.select("#precinct");
           let ttl = details.select("#total");
           let typeTtl = details.select("#typeTotal");
-          let timeTtl = details.select("#timeTotal")
+          let timeTtl = details.select("#timeTotal");
+          let allTtl = details.select("#allTotal");
           if (selectedPrecinct === null) {
             selectedHateCrimes = hateCrimes;
-            // txt.text("No selected precinct");
-            // ttl.text(`Total number of hate crimes: ${selectedHateCrimes.length}`);
+            txt.text("No selected precinct");
+            ttl.text(`Total number of hate crimes: ${selectedHateCrimes.length}`);
             // if (filteredType !== null) {
             //   typeTtl.text(
             //     `Total number of ${filteredType.toLowerCase()} hate crimes: ${
@@ -593,7 +595,7 @@
               (d) => d.precinct == selectedPrecinct
             );
             ttl.text(
-              `Total number of hate crimes: ${selectedHateCrimes.length}`
+              `Number of hate crimes: ${selectedHateCrimes.length}`
             );
             selAndfil = hateCrimes.filter(
               (d) => d.precinct == selectedPrecinct && d["Bias Motive Description"] == filteredType
@@ -601,7 +603,7 @@
 
             if (filteredType !== null) {
               typeTtl.text(
-                `Total number of ${filteredType.toLowerCase()} hate crimes: ${
+                `Number of ${filteredType.toLowerCase()} hate crimes: ${
                   hateCrimes.filter(d => d["Bias Motive Description"] == filteredType
                   && d.precinct == selectedPrecinct).length
                 }`
@@ -611,7 +613,7 @@
             }
             if (time_start != min_date || time_end != max_date) {
               timeTtl.text(
-                `Total number of hate crimes in selected time range: ${
+                `Number of hate crimes in selected time range: ${
                   hateCrimes.filter(d => d["Record Create Date"] >= time_start &&
                   d["Record Create Date"] <= time_end &&
                   d.precinct == selectedPrecinct).length
@@ -620,6 +622,21 @@
             else {
               timeTtl.text("");
             }
+            if ((filteredType !== null) && (time_start != min_date || time_end != max_date)) {
+              allTtl.text(
+                `Number of ${filteredType.toLowerCase()} hate crimes in selected time range: ${
+                  hateCrimes.filter(d =>
+                    d["Bias Motive Description"] == filteredType &&
+                    d["Record Create Date"] >= time_start &&
+                    d["Record Create Date"] <= time_end &&
+                    d.precinct == selectedPrecinct).length}`);
+            }
+            else {
+              allTtl.text("");
+            }
+
+
+
           }
 
           displayBar();
