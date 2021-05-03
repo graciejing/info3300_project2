@@ -166,6 +166,7 @@
 
     <div id="overlay"></div>
     <script>
+    //hello
       //create cloropleth
       const svg = d3.select("svg#map");
       const width = svg.attr("width");
@@ -952,7 +953,8 @@
             hateCrimeCount[r] = { type: r, number: 0 };
           });
 
-          selectedHateCrimes.forEach((d) => {
+          selectedHateCrimes.filter(d => d["Record Create Date"] >= time_start &&
+            d["Record Create Date"] <= time_end).forEach((d) => {
             if (hateCrimeTypes.includes(d["Bias Motive Description"])) {
               hateCrimeCount[d["Bias Motive Description"]]["number"] += 1;
             }
