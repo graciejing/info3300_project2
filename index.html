@@ -215,6 +215,7 @@
       const mapHeight = height - margin.top - margin.bottom;
       const map = svg.append("g")
       .attr("transform","translate("+margin.left+","+margin.top+")");
+
       //demographic map
       const demoMap = svg.append("g")
       .attr("transform","translate("+margin.left+","+margin.top+")");
@@ -228,8 +229,8 @@
 
         // a GeoJSON dataset of police precincts in NYC
         let precincts = await d3.json("Police_Precincts.geojson");
-        // console.log(precincts)
 
+        // a GeoJSON data set of community districts in NYC
         let communities = await d3.json("Community Districts.geojson");
 
         // a CSV dataset of demographics of NYC
@@ -279,11 +280,6 @@
           d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); //PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
         });
 
-        console.log(hateCrimes);
-        console.log(precincts);
-        console.log(demographics);
-        console.log(communities);
-
         let colorScale = d3.scaleQuantile();
 
         //create map for precincts
@@ -325,10 +321,7 @@
           .scaleOrdinal()
           .domain(races)
           .range(d3.schemeCategory10);
-        let controlScale = d3
-        .scaleOrdinal()
-        .domain(races)
-        .range(["#D5D5D6", "#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD","#8C564B" ])
+
         var demoProjection = d3
           .geoMercator()
           .fitSize([mapWidth, mapHeight], communities);
@@ -372,7 +365,6 @@
           hispanic: "ANTI-HISPANIC",
           other: "ANTI-OTHER ETHNICITY",
           twoplus: "ANTI-MULTI-RACIAL GROUPS",
-
         };
 
         const crimeToDemo = {};
@@ -386,6 +378,7 @@
           .append("div")
           .attr("id", "type")
           .attr("class", "filter");
+
         clearArea = d3.select("#clearArea")
         let clearButton = clearArea
           .append("button")
@@ -395,7 +388,6 @@
 
         hateCrimeTypes.forEach((d) => {
           crimeFilter
-            // .append("input")
             .append("button")
             .attr("name", d)
             .attr("id", d)
@@ -412,7 +404,6 @@
         let selectedHateCrimes = hateCrimes;
 
         //create time slider
-
         let timeSliderHeight = 70;
         let timeSliderWidth = 800;
         let axisLeftMargin = 25;
@@ -425,6 +416,7 @@
         var display_time_start = time_start;
         var display_time_end = time_end;
 
+        // code to make time scrubber
         function makePath() {
           let values = hateCrimes;
           if (filteredType !== null) {
@@ -456,9 +448,6 @@
             length: counts[0].length,
 
           });
-
-          console.log("counts");
-          console.log(counts);
 
           // y scale
           let yExtent = d3.extent(counts, (d) => d.length);
@@ -500,7 +489,6 @@
           else {
             d3.selectAll(".area").style("fill", demoScale(crimeToDemo[filteredType]));
           }
-
         }
 
         let formatTimeMonth = d3.timeFormat("%B %Y");
@@ -539,7 +527,6 @@
         makePath();
 
         function brushMoved(event) {
-          console.log(event.type, event.selection, event);
 
           if (event.selection !== null) {
             let startPixels = event.selection[0];
@@ -620,13 +607,9 @@
 
         let colorLegend = d3.select("#colorLegend");
         colorLegend.append("g").attr("class", "colorbar axis");
-        // drawLegend(colorLegend, colorScale)
 
         //adding details for precinct on click
         let details = d3.select("#details").style("visibility", "hidden");
-        // details
-        //   .select("#total")
-        //   .text(`Total number of hate crimes: ${hateCrimes.length}`);
 
         // BEGINNING OF FUNCTIONS
 
@@ -648,27 +631,21 @@
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
 
-          // let txt = d3.select("text#precinct");
-
           // already selected
           if (selectedPrecinct === precinctNumber) {
-            // details.style("visibility", "hidden")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
             });
             selectedPrecinct = null;
           } else if (selectedPrecinct === null) {
-            // details.style("visibility", "")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3)
             });
-
             selectedPrecinct = precinctNumber;
           } else {
             d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
             });
-
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3);
             });
@@ -768,9 +745,7 @@
             else {
               allTtl.text("");
             }
-
           }
-
           displayBar();
         }
 
@@ -790,7 +765,6 @@
                 d3.select(this).attr("visibility", "");
               }
             });
-
             showDemoButton.attr("clicked", true);
           }
         }
@@ -814,10 +788,8 @@
           d3.selectAll(".type")
             .each( function() {
               let fil = d3.select(this);
-              console.log(fil);
               fil.style("background-color", "white");
               fil.attr("clicked", false);
-              console.log(fil.attr("clicked"));
             });
 
           d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
@@ -861,28 +833,6 @@
 
         //update precincts based on filtered data
         function updateFiltered() {
-
-          // d3.selectAll(".type")
-          //   .each( function() {
-          //   let fil = d3.select(this);
-          //   // if (fil.attr("name") == filteredType) {
-          //   //   fil.style("background-color", "#ffc63d");
-          //   // }
-          //   // else {
-          //   //   fil.style("background-color", "white");
-          //   // }
-          // });
-          // areaLayer.selectAll("path").each(function() {
-          //   console.log("checking");
-          //   let areafill = d3.select(this);
-          //   console.log(d3.select(this).style("fill"));
-          //   console.log(filteredType);
-          //   areafill.style("fill", demoScale(crimeToDemo[filteredType]));
-          //   areafill.style("fill", "black");
-          //   console.log(d3.select(this).style("fill"))
-          // });
-          // area.style("fill", demoScale(crimeToDemo[filteredType]));
-          // d3.selectAll(".area").style("fill", demoScale(crimeToDemo[filteredType]));
 
           if (filteredType !== null) {
             filteredHateCrimes = hateCrimes.filter(
@@ -952,7 +902,6 @@
             "transform",
             "translate(" + barMargin.left + "," + barMargin.top + ")"
           );
-        // .attr("transform", "rotate(90)");
 
         var crimeScale = d3
           .scaleBand()
@@ -993,8 +942,6 @@
             `translate(${barMargin.left - 10},${barMargin.top})`
           );
 
-        // // bottom axis
-
         barChart
           .selectAll("text")
           .style("text-anchor", "end")
@@ -1030,16 +977,7 @@
           leftAxisG.transition().call(leftAxis);
           leftGridlines.scale(countScale);
           leftGridlinesG.transition().call(leftGridlines);
-          // leftAxis = d3.axisLeft(countScale);
-          // leftGridlines = d3
-          //   .axisLeft(countScale)
-          //   .tickSize(-barChartWidth - 10)
-          //   .tickFormat("");
-          // annotations.call(leftAxis);
-          // annotations.call(leftGridlines);
-          // var colorScale = d3
-          //   .scaleOrdinal(d3.schemeCategory10)
-          //   .domain(hateCrimeTypes);
+
           chartArea
             .selectAll("rect.bar")
             .data(hateCountList)
@@ -1053,7 +991,6 @@
         }
 
         function getDomDemo(d) {
-
           n = demographics.filter((demo) => {
             return demo.boro_cd.includes(d.properties["boro_cd"]);
           });
