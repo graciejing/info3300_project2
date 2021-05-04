@@ -65,8 +65,8 @@
         flex-direction: row;
       }
       h4{
-        margin-top:0px;
-        margin-bottom:15px;
+        margin-top: 0px;
+        margin-bottom: 10px;
       }
       #filters {
         display: block;
@@ -109,7 +109,7 @@
 
       #colorlegend {
         position: absolute;
-        top: 970px;
+        top: 1000px;
         left: 500px;
       }
 
@@ -148,7 +148,7 @@
       the demographic overlay, which will show the main demographic of each area. When
       a filter is selected this will only indicate the areas of that selected demographic.
       Since the demographic overlay still shows the choropleth map of frequency of
-      hate crimes in each precinct, the user can see if areas with one race as the main demographic is the area 
+      hate crimes in each precinct, the user can see if areas with one race as the main demographic is the area
       where most of the hate crimes of that demographic are happening.
   </div>
     <div class="row">
@@ -177,7 +177,7 @@
         </div>
           <div class="col">
             <div id="details">
-              <h4>Number of hate crimes per added filter:</h4>
+              <h4>Details - Number of hate crimes per added filter:</h4>
               <div id="precinct">No selected precinct</div>
               <div id="total"></div>
               <div id="typeTotal"></div>
@@ -742,7 +742,7 @@
             }
             if ((filteredType !== null) && (time_start != min_date || time_end != max_date)) {
               allTtl.text(
-                `Number of ${filteredType.toLowerCase()} hate crimes in selected time range: ${
+                `Number of ${filteredType.toLowerCase()} hate crimes between ${display_time_start} and ${display_time_end}: ${
                   hateCrimes.filter(d =>
                     d["Bias Motive Description"] == filteredType &&
                     d["Record Create Date"] >= time_start &&
@@ -798,9 +798,12 @@
           d3.selectAll(".type")
             .each( function() {
               let fil = d3.select(this);
+              console.log(fil);
               fil.style("background-color", "white");
+              fil.attr("clicked", false);
+              console.log(fil.attr("clicked"));
             });
-            
+
           d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
             d3.select(this).attr("stroke-width", "1");
           });
@@ -822,14 +825,17 @@
           let fil = d3.select(this);
           if (fil.attr("clicked") == "true") {
             filteredType = null;
+            fil.style("background-color", "white");
             fil.attr("clicked", false)
           }
           else {
             filteredType = fil.attr("name");
             d3.selectAll(".type").each(function() {
-              d3.select(this).attr("clicked", false)
+              d3.select(this).style("background-color", "white");
+              d3.select(this).attr("clicked", false);
             })
             fil.attr("clicked", true)
+            fil.style("background-color", "#ffc63d");
           }
 
           updateFiltered();
@@ -843,12 +849,12 @@
           d3.selectAll(".type")
             .each( function() {
             let fil = d3.select(this);
-            if (fil.attr("name") == filteredType) {
-              fil.style("background-color", "#ffc63d");
-            }
-            else {
-              fil.style("background-color", "white");
-            }
+            // if (fil.attr("name") == filteredType) {
+            //   fil.style("background-color", "#ffc63d");
+            // }
+            // else {
+            //   fil.style("background-color", "white");
+            // }
           });
 
           if (filteredType !== null) {
@@ -905,7 +911,7 @@
         // CREATE BAR CHART
 
         const barChart = d3.select("svg#bar");
-        const barMargin = { top: 30, right: 30, bottom: 90, left: 70 };
+        const barMargin = { top: 10, right: 30, bottom: 90, left: 70 };
         const barWidth = barChart.attr("width");
         const barHeight = barChart.attr("height");
         const barChartWidth = barWidth - barMargin.left - barMargin.right;
