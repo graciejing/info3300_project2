@@ -94,11 +94,7 @@
         flex-direction: column;
         margin: auto;
       }
-      /* #absolute{
-        position:absolute;
-        top: 200px;
-        left:100px;
-      } */
+
       #header{
         padding: 10px;
       }
@@ -205,7 +201,7 @@
 
     <div id="overlay"></div>
     <script>
-      //create cloropleth
+      //create choropleth
       const svg = d3.select("svg#map");
       const width = svg.attr("width");
       const height = svg.attr("height");
@@ -271,12 +267,11 @@
           d.white = Number(d["WtNHE"].replace(/,/g, ""));
           d.native = Number(d["AIANNHE"].replace(/,/g, ""));
           d.black = Number(d["BlNHE"].replace(/,/g, ""));
-          // d.hawaiianpi =;
           d.other =
             Number(d["OthNHE"].replace(/,/g, "")) +
             Number(d["NHPINHE"].replace(/,/g, ""));
           d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
-          d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); //PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
+          d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); 
         });
 
         let colorScale = d3.scaleQuantile();
@@ -305,7 +300,6 @@
           .attr("d", precinctPath)
           .on("click", updateSelected);
 
-        //create demographic overlay
         let races = [
           "asian",
           "black",
@@ -556,7 +550,6 @@
 
         canvas.append("g").attr("class", "brush").call(myBrush);
 
-        //creating legends
         //demographic legend inspiration: https://bl.ocks.org/mtandre/bea54a387eb5506ad5d46cb5e74d9bce
         const legendarea = d3.select("svg#demolegend");
 
@@ -612,7 +605,6 @@
         let details = d3.select("#details").style("visibility", "hidden");
 
         // BEGINNING OF FUNCTIONS
-
         function getCDNum(s, boro) {
           i1 = s.indexOf("District") + 9;
           i2 = s.indexOf("--");
@@ -886,7 +878,7 @@
         }
 
         // CREATE BAR CHART
-
+        //Bar chart inspired by lecture 
         const barChart = d3.select("svg#bar");
         const barMargin = { top: 10, right: 30, bottom: 90, left: 70 };
         const barWidth = barChart.attr("width");
@@ -1021,34 +1013,28 @@
         // Bonus code here to draw an adaptive gradient legend so we can see different color scales for choropleth maps
         //  Credit Prof. Rz if you are basing a legend on this structure, and note SERIOUS PERFORMANCE CONSIDERATIONS
 
-        //const legend = d3.select("#colorLegend");
         const legendWidth = legend.attr("width");
         const legendHeight = legend.attr("height");
-        const legendMinMax = d3.extent(legendColorScale.domain()); // way to recover the minMax from most kinds of scales
+        const legendMinMax = d3.extent(legendColorScale.domain()); 
         const barHeight = 20;
-        const stepSize = 4; // warning, not using a canvas element so lots of rect tags will be created for low stepSize, causing issues with performance
-        // Extend the minmax by 1 in either direction to expose more features
+        const stepSize = 4; 
         const pixelScale = d3
           .scaleLinear()
           .domain([0, legendWidth - 40])
-          .range([legendMinMax[0] - 1, legendMinMax[1] + 1]); // In this case the "data" are pixels, and we get numbers to use in colorScale
+          .range([legendMinMax[0] - 1, legendMinMax[1] + 1]);
         const barScale = d3
           .scaleLinear()
           .domain([legendMinMax[0] - 1, legendMinMax[1] + 1])
           .range([0, legendWidth - 40]);
         const barAxis = d3.axisBottom(barScale);
-        // Check if we're using a quantile scale - if so, we can do better
         if (legendColorScale.hasOwnProperty("quantiles")) {
-          // Use the quantile breakpoints plus the min and max of the scale as tick values
           barAxis.tickValues(legendColorScale.quantiles().concat(legendMinMax));
         }
         legend
           .select(".colorbar, .axis")
           .attr("transform", "translate(" + 20 + "," + (barHeight + 5) + ")")
           .call(barAxis);
-        // .call(barAxis);
 
-        // Draw rects of color down the bar
         let bar = legend
           .append("g")
           .attr("transform", "translate(" + 20 + "," + 0 + ")");
@@ -1059,9 +1045,8 @@
             .attr("y", 0)
             .attr("width", stepSize)
             .attr("height", barHeight)
-            .style("fill", legendColorScale(pixelScale(i))); // pixels => countData => color
+            .style("fill", legendColorScale(pixelScale(i))); 
         }
-        // Put lines in to mark actual min and max of our data
         bar
           .append("line")
           .attr("stroke", "white")
@@ -1080,12 +1065,9 @@
           .attr("y1", barHeight + 4);
       }
 
-      //function to update the legend
       function updateLegend(legend, legendColorScale) {
         const barAxis = d3.axisBottom(barScale);
-        // Check if we're using a quantile scale - if so, we can do better
         if (legendColorScale.hasOwnProperty("quantiles")) {
-          // Use the quantile breakpoints plus the min and max of the scale as tick values
           barAxis.tickValues(legendColorScale.quantiles().concat(legendMinMax));
         }
         legend.select(".colorbar, .axis").call(barAxis);
