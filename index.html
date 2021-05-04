@@ -338,11 +338,17 @@
           .data(communities.features)
           .join("path")
           .attr("class", "community")
-          // .attr("stroke", "black")
           .attr("stroke-width", 0)
+          .attr("fill", (d) => {
+            if (getDomDemo(d) == null) {
+              return "gray";
+            }
+            else {
+              return demoScale(getDomDemo(d));
+            }
+          })
           .attr("d", demoPath)
           .attr("opacity", 0.5)
-          .attr("fill", (d) => demoScale(getDomDemo(d)))
           .attr("visibility", "hidden");
 
         //create button to show demographic overlay
@@ -366,6 +372,7 @@
           hispanic: "ANTI-HISPANIC",
           other: "ANTI-OTHER ETHNICITY",
           twoplus: "ANTI-MULTI-RACIAL GROUPS",
+
         };
 
         const crimeToDemo = {};
@@ -474,7 +481,6 @@
             .x((d) => xScale(d.x1) + 10)
             .y0(freqScale(0))
             .y1((d) => freqScale(d.length))
-            // .curve(d3.curveNatural);
 
           canvas.select(".areaLayer").remove();
 
@@ -485,10 +491,16 @@
             .datum(counts)
             .attr("transform", `translate(${axisLeftMargin}, -${yExtent[0]})`)
             .attr("class", "area")
-            .style("fill", (d) =>controlScale(d))
             .attr("d", area);
 
             areaLayer.lower();
+          if (filteredType === null) {
+            d3.selectAll(".area").style("fill", "white");
+          }
+          else {
+            d3.selectAll(".area").style("fill", demoScale(crimeToDemo[filteredType]));
+          }
+
         }
 
         let formatTimeMonth = d3.timeFormat("%B %Y");
@@ -578,7 +590,12 @@
           .attr("width", 12)
           .attr("height", 12)
           .attr("fill", function (d, i) {
-            return demoScale(d);
+            if (d == null) {
+              return "gray";
+            }
+            else {
+              return demoScale(d);
+            }
           });
 
         demoLegend
@@ -845,16 +862,27 @@
         //update precincts based on filtered data
         function updateFiltered() {
 
-          d3.selectAll(".type")
-            .each( function() {
-            let fil = d3.select(this);
-            // if (fil.attr("name") == filteredType) {
-            //   fil.style("background-color", "#ffc63d");
-            // }
-            // else {
-            //   fil.style("background-color", "white");
-            // }
-          });
+          // d3.selectAll(".type")
+          //   .each( function() {
+          //   let fil = d3.select(this);
+          //   // if (fil.attr("name") == filteredType) {
+          //   //   fil.style("background-color", "#ffc63d");
+          //   // }
+          //   // else {
+          //   //   fil.style("background-color", "white");
+          //   // }
+          // });
+          // areaLayer.selectAll("path").each(function() {
+          //   console.log("checking");
+          //   let areafill = d3.select(this);
+          //   console.log(d3.select(this).style("fill"));
+          //   console.log(filteredType);
+          //   areafill.style("fill", demoScale(crimeToDemo[filteredType]));
+          //   areafill.style("fill", "black");
+          //   console.log(d3.select(this).style("fill"))
+          // });
+          // area.style("fill", demoScale(crimeToDemo[filteredType]));
+          // d3.selectAll(".area").style("fill", demoScale(crimeToDemo[filteredType]));
 
           if (filteredType !== null) {
             filteredHateCrimes = hateCrimes.filter(
@@ -1025,6 +1053,7 @@
         }
 
         function getDomDemo(d) {
+
           n = demographics.filter((demo) => {
             return demo.boro_cd.includes(d.properties["boro_cd"]);
           });
