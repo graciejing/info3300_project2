@@ -94,11 +94,7 @@
         flex-direction: column;
         margin: auto;
       }
-      /* #absolute{
-        position:absolute;
-        top: 200px;
-        left:100px;
-      } */
+
       #header{
         padding: 10px;
       }
@@ -109,7 +105,7 @@
 
       #colorlegend {
         position: absolute;
-        top: 1000px;
+        top: 970px;
         left: 500px;
       }
 
@@ -154,7 +150,7 @@
     <div class="row">
       <div id="sidebar" class="detailscolor">
         <div id="clearArea"></div>
-        <h4><strong>Filter</strong> Data by Race</h4>
+        <h4><strong>Filter</strong> Hate Crime by Race</h4>
         <div id="filters"></div>
         <div id="legend"></div>
         <h4><strong>Overlay</strong> with Main Demographic per Community District</h4>
@@ -163,7 +159,7 @@
       </div>
       <div class="col">
         <div class = "detailscolor">
-        <h4><strong>Time Scrubber</strong> & Hate Crimes Related to Race Filters Over Time        </h4>
+        <h4><strong>Time Scrubber</strong> & Number of Hate Crimes Related to Race Filters Over Time        </h4>
 
           <p>Narrow the dataset according to time ranges as well with the line graph</p>
         <div id="control"></div>
@@ -205,8 +201,7 @@
 
     <div id="overlay"></div>
     <script>
-    //hello
-      //create cloropleth
+      //create choropleth
       const svg = d3.select("svg#map");
       const width = svg.attr("width");
       const height = svg.attr("height");
@@ -215,6 +210,7 @@
       const mapHeight = height - margin.top - margin.bottom;
       const map = svg.append("g")
       .attr("transform","translate("+margin.left+","+margin.top+")");
+
       //demographic map
       const demoMap = svg.append("g")
       .attr("transform","translate("+margin.left+","+margin.top+")");
@@ -228,8 +224,8 @@
 
         // a GeoJSON dataset of police precincts in NYC
         let precincts = await d3.json("Police_Precincts.geojson");
-        // console.log(precincts)
 
+        // a GeoJSON data set of community districts in NYC
         let communities = await d3.json("Community Districts.geojson");
 
         // a CSV dataset of demographics of NYC
@@ -273,18 +269,12 @@
           d.white = Number(d["WtNHE"].replace(/,/g, ""));
           d.native = Number(d["AIANNHE"].replace(/,/g, ""));
           d.black = Number(d["BlNHE"].replace(/,/g, ""));
-          // d.hawaiianpi =;
           d.other =
             Number(d["OthNHE"].replace(/,/g, "")) +
             Number(d["NHPINHE"].replace(/,/g, ""));
           d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
-          d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); //PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
+          d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); 
         });
-
-        console.log(hateCrimes);
-        console.log(precincts);
-        console.log(demographics);
-        console.log(communities);
 
         let colorScale = d3.scaleQuantile();
 
@@ -312,7 +302,6 @@
           .attr("d", precinctPath)
           .on("click", updateSelected);
 
-        //create demographic overlay
         let races = [
           "asian",
           "black",
@@ -327,10 +316,7 @@
           .scaleOrdinal()
           .domain(races)
           .range(d3.schemeCategory10);
-        let controlScale = d3
-        .scaleOrdinal()
-        .domain(races)
-        .range(["#D5D5D6", "#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD","#8C564B" ])
+
         var demoProjection = d3
           .geoMercator()
           .fitSize([mapWidth, mapHeight], communities);
@@ -340,11 +326,17 @@
           .data(communities.features)
           .join("path")
           .attr("class", "community")
-          // .attr("stroke", "black")
           .attr("stroke-width", 0)
+          .attr("fill", (d) => {
+            if (getDomDemo(d) == null) {
+              return "gray";
+            }
+            else {
+              return demoScale(getDomDemo(d));
+            }
+          })
           .attr("d", demoPath)
           .attr("opacity", 0.5)
-          .attr("fill", (d) => demoScale(getDomDemo(d)))
           .attr("visibility", "hidden");
 
         //create button to show demographic overlay
@@ -381,6 +373,7 @@
           .append("div")
           .attr("id", "type")
           .attr("class", "filter");
+
         clearArea = d3.select("#clearArea")
         let clearButton = clearArea
           .append("button")
@@ -390,7 +383,6 @@
 
         hateCrimeTypes.forEach((d) => {
           crimeFilter
-            // .append("input")
             .append("button")
             .attr("name", d)
             .attr("id", d)
@@ -407,7 +399,6 @@
         let selectedHateCrimes = hateCrimes;
 
         //create time slider
-
         let timeSliderHeight = 70;
         let timeSliderWidth = 800;
         let axisLeftMargin = 25;
@@ -420,6 +411,7 @@
         var display_time_start = time_start;
         var display_time_end = time_end;
 
+        // code to make time scrubber
         function makePath() {
           let values = hateCrimes;
           if (filteredType !== null) {
@@ -452,9 +444,6 @@
 
           });
 
-          console.log("counts");
-          console.log(counts);
-
           // y scale
           let yExtent = d3.extent(counts, (d) => d.length);
           let freqScale = d3
@@ -486,10 +475,15 @@
             .datum(counts)
             .attr("transform", `translate(${axisLeftMargin}, -${yExtent[0]})`)
             .attr("class", "area")
-            .style("fill", (d) =>controlScale(d))
             .attr("d", area);
 
             areaLayer.lower();
+          if (filteredType === null) {
+            d3.selectAll(".area").style("fill", "white");
+          }
+          else {
+            d3.selectAll(".area").style("fill", demoScale(crimeToDemo[filteredType]));
+          }
         }
 
         let formatTimeMonth = d3.timeFormat("%B %Y");
@@ -528,8 +522,11 @@
         makePath();
 
         function brushMoved(event) {
+<<<<<<< HEAD
           console.log("event");
           console.log(event.type, event.selection, event);
+=======
+>>>>>>> 89d6a3453bd1e9371351001c2a1b801f9ff0e864
 
           if (event.selection !== null) {
             let startPixels = event.selection[0];
@@ -562,7 +559,7 @@
 
         canvas.append("g").attr("class", "brush").call(myBrush);
 
-        //creating legends
+        //demographic legend inspiration: https://bl.ocks.org/mtandre/bea54a387eb5506ad5d46cb5e74d9bce
         const legendarea = d3.select("svg#demolegend");
 
         let demoLegend = legendarea
@@ -582,7 +579,12 @@
           .attr("width", 12)
           .attr("height", 12)
           .attr("fill", function (d, i) {
-            return demoScale(d);
+            if (d == null) {
+              return "gray";
+            }
+            else {
+              return demoScale(d);
+            }
           });
 
         demoLegend
@@ -607,16 +609,11 @@
 
         let colorLegend = d3.select("#colorLegend");
         colorLegend.append("g").attr("class", "colorbar axis");
-        // drawLegend(colorLegend, colorScale)
 
         //adding details for precinct on click
         let details = d3.select("#details").style("visibility", "hidden");
-        // details
-        //   .select("#total")
-        //   .text(`Total number of hate crimes: ${hateCrimes.length}`);
 
         // BEGINNING OF FUNCTIONS
-
         function getCDNum(s, boro) {
           i1 = s.indexOf("District") + 9;
           i2 = s.indexOf("--");
@@ -635,27 +632,21 @@
           let precinct = d3.select(this);
           let precinctNumber = precinct.datum().properties["precinct"];
 
-          // let txt = d3.select("text#precinct");
-
           // already selected
           if (selectedPrecinct === precinctNumber) {
-            // details.style("visibility", "hidden")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
             });
             selectedPrecinct = null;
           } else if (selectedPrecinct === null) {
-            // details.style("visibility", "")
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3)
             });
-
             selectedPrecinct = precinctNumber;
           } else {
             d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
               d3.select(this).attr("stroke-width", 1);
             });
-
             d3.selectAll(`.outline.p${precinctNumber}`).each(function () {
               d3.select(this).attr("stroke-width", 3);
             });
@@ -755,9 +746,7 @@
             else {
               allTtl.text("");
             }
-
           }
-
           displayBar();
         }
 
@@ -777,7 +766,6 @@
                 d3.select(this).attr("visibility", "");
               }
             });
-
             showDemoButton.attr("clicked", true);
           }
         }
@@ -801,10 +789,8 @@
           d3.selectAll(".type")
             .each( function() {
               let fil = d3.select(this);
-              console.log(fil);
               fil.style("background-color", "white");
               fil.attr("clicked", false);
-              console.log(fil.attr("clicked"));
             });
 
           d3.selectAll(`.outline.p${selectedPrecinct}`).each(function () {
@@ -848,17 +834,6 @@
 
         //update precincts based on filtered data
         function updateFiltered() {
-
-          d3.selectAll(".type")
-            .each( function() {
-            let fil = d3.select(this);
-            // if (fil.attr("name") == filteredType) {
-            //   fil.style("background-color", "#ffc63d");
-            // }
-            // else {
-            //   fil.style("background-color", "white");
-            // }
-          });
 
           if (filteredType !== null) {
             filteredHateCrimes = hateCrimes.filter(
@@ -912,7 +887,7 @@
         }
 
         // CREATE BAR CHART
-
+        //Bar chart inspired by lecture 
         const barChart = d3.select("svg#bar");
         const barMargin = { top: 10, right: 30, bottom: 90, left: 70 };
         const barWidth = barChart.attr("width");
@@ -928,7 +903,6 @@
             "transform",
             "translate(" + barMargin.left + "," + barMargin.top + ")"
           );
-        // .attr("transform", "rotate(90)");
 
         var crimeScale = d3
           .scaleBand()
@@ -969,8 +943,6 @@
             `translate(${barMargin.left - 10},${barMargin.top})`
           );
 
-        // // bottom axis
-
         barChart
           .selectAll("text")
           .style("text-anchor", "end")
@@ -1006,16 +978,7 @@
           leftAxisG.transition().call(leftAxis);
           leftGridlines.scale(countScale);
           leftGridlinesG.transition().call(leftGridlines);
-          // leftAxis = d3.axisLeft(countScale);
-          // leftGridlines = d3
-          //   .axisLeft(countScale)
-          //   .tickSize(-barChartWidth - 10)
-          //   .tickFormat("");
-          // annotations.call(leftAxis);
-          // annotations.call(leftGridlines);
-          // var colorScale = d3
-          //   .scaleOrdinal(d3.schemeCategory10)
-          //   .domain(hateCrimeTypes);
+
           chartArea
             .selectAll("rect.bar")
             .data(hateCountList)
@@ -1059,34 +1022,28 @@
         // Bonus code here to draw an adaptive gradient legend so we can see different color scales for choropleth maps
         //  Credit Prof. Rz if you are basing a legend on this structure, and note SERIOUS PERFORMANCE CONSIDERATIONS
 
-        //const legend = d3.select("#colorLegend");
         const legendWidth = legend.attr("width");
         const legendHeight = legend.attr("height");
-        const legendMinMax = d3.extent(legendColorScale.domain()); // way to recover the minMax from most kinds of scales
+        const legendMinMax = d3.extent(legendColorScale.domain()); 
         const barHeight = 20;
-        const stepSize = 4; // warning, not using a canvas element so lots of rect tags will be created for low stepSize, causing issues with performance
-        // Extend the minmax by 1 in either direction to expose more features
+        const stepSize = 4; 
         const pixelScale = d3
           .scaleLinear()
           .domain([0, legendWidth - 40])
-          .range([legendMinMax[0] - 1, legendMinMax[1] + 1]); // In this case the "data" are pixels, and we get numbers to use in colorScale
+          .range([legendMinMax[0] - 1, legendMinMax[1] + 1]);
         const barScale = d3
           .scaleLinear()
           .domain([legendMinMax[0] - 1, legendMinMax[1] + 1])
           .range([0, legendWidth - 40]);
         const barAxis = d3.axisBottom(barScale);
-        // Check if we're using a quantile scale - if so, we can do better
         if (legendColorScale.hasOwnProperty("quantiles")) {
-          // Use the quantile breakpoints plus the min and max of the scale as tick values
           barAxis.tickValues(legendColorScale.quantiles().concat(legendMinMax));
         }
         legend
           .select(".colorbar, .axis")
           .attr("transform", "translate(" + 20 + "," + (barHeight + 5) + ")")
           .call(barAxis);
-        // .call(barAxis);
 
-        // Draw rects of color down the bar
         let bar = legend
           .append("g")
           .attr("transform", "translate(" + 20 + "," + 0 + ")");
@@ -1097,9 +1054,8 @@
             .attr("y", 0)
             .attr("width", stepSize)
             .attr("height", barHeight)
-            .style("fill", legendColorScale(pixelScale(i))); // pixels => countData => color
+            .style("fill", legendColorScale(pixelScale(i))); 
         }
-        // Put lines in to mark actual min and max of our data
         bar
           .append("line")
           .attr("stroke", "white")
@@ -1118,12 +1074,9 @@
           .attr("y1", barHeight + 4);
       }
 
-      //function to update the legend
       function updateLegend(legend, legendColorScale) {
         const barAxis = d3.axisBottom(barScale);
-        // Check if we're using a quantile scale - if so, we can do better
         if (legendColorScale.hasOwnProperty("quantiles")) {
-          // Use the quantile breakpoints plus the min and max of the scale as tick values
           barAxis.tickValues(legendColorScale.quantiles().concat(legendMinMax));
         }
         legend.select(".colorbar, .axis").call(barAxis);
