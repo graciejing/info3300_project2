@@ -154,7 +154,7 @@
     <div class="row">
       <div id="sidebar" class="detailscolor">
         <div id="clearArea"></div>
-        <h4><strong>Filter</strong> Data by Race</h4>
+        <h4><strong>Filter</strong> Hate Crime by Race</h4>
         <div id="filters"></div>
         <div id="legend"></div>
         <h4><strong>Overlay</strong> with Main Demographic per Community District</h4>
@@ -163,7 +163,7 @@
       </div>
       <div class="col">
         <div class = "detailscolor">
-        <h4><strong>Time Scrubber</strong> & Hate Crimes Related to Race Filters Over Time        </h4>
+        <h4><strong>Time Scrubber</strong> & Number of Hate Crimes Related to Race Filters Over Time        </h4>
 
           <p>Narrow the dataset according to time ranges as well with the line graph</p>
         <div id="control"></div>
@@ -205,7 +205,6 @@
 
     <div id="overlay"></div>
     <script>
-    //hello
       //create cloropleth
       const svg = d3.select("svg#map");
       const width = svg.attr("width");
@@ -558,6 +557,7 @@
         canvas.append("g").attr("class", "brush").call(myBrush);
 
         //creating legends
+        //demographic legend inspiration: https://bl.ocks.org/mtandre/bea54a387eb5506ad5d46cb5e74d9bce
         const legendarea = d3.select("svg#demolegend");
 
         let demoLegend = legendarea
