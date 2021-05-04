@@ -259,8 +259,6 @@
           d["precinct"] = d["Complaint Precinct Code"];
         });
 
-        console.log(max_date);
-
         // clean up demographic data
         demographics.pop();
         demographics.forEach((d) => {
@@ -515,7 +513,7 @@
           .brushX()
           .extent([
             [10 + axisLeftMargin, 0],
-            [timeSliderWidth + 20, timeSliderHeight],
+            [timeSliderWidth + 35, timeSliderHeight],
           ])
           .on("brush end", brushMoved);
 
@@ -546,8 +544,6 @@
             display_time_start = formatTimeDate(time_start);
             display_time_end = formatTimeDate(time_end);
           }
-          console.log("display time end");
-          console.log(display_time_end);
 
           updateFiltered();
         }
