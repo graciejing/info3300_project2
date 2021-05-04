@@ -263,6 +263,8 @@
           d["precinct"] = d["Complaint Precinct Code"];
         });
 
+        console.log(max_date);
+
         // clean up demographic data
         demographics.pop();
         demographics.forEach((d) => {
@@ -474,7 +476,6 @@
             .x((d) => xScale(d.x1) + 10)
             .y0(freqScale(0))
             .y1((d) => freqScale(d.length))
-            // .curve(d3.curveNatural);
 
           canvas.select(".areaLayer").remove();
 
@@ -527,13 +528,14 @@
         makePath();
 
         function brushMoved(event) {
+          console.log("event");
           console.log(event.type, event.selection, event);
 
           if (event.selection !== null) {
             let startPixels = event.selection[0];
             let start = xScale.invert(startPixels);
 
-            let endPixels = event.selection[1];
+            let endPixels = event.selection[1] - 20;
             let end = xScale.invert(endPixels);
 
             filterFunc = (d) =>
@@ -552,6 +554,8 @@
             display_time_start = formatTimeDate(time_start);
             display_time_end = formatTimeDate(time_end);
           }
+          console.log("display time end");
+          console.log(display_time_end);
 
           updateFiltered();
         }
