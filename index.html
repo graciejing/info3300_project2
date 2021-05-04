@@ -506,7 +506,7 @@
           .append("g")
           .attr(
             "transform",
-            `translate(${axisLeftMargin}, ${timeSliderHeight + 15})`
+            `translate(${axisLeftMargin + 20}, ${timeSliderHeight + 15})`
           )
           .attr("class", "x-axis")
           .call(xAxis);
@@ -522,11 +522,6 @@
         makePath();
 
         function brushMoved(event) {
-<<<<<<< HEAD
-          console.log("event");
-          console.log(event.type, event.selection, event);
-=======
->>>>>>> 89d6a3453bd1e9371351001c2a1b801f9ff0e864
 
           if (event.selection !== null) {
             let startPixels = event.selection[0];
