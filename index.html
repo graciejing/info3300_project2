@@ -275,7 +275,7 @@
           d.other =
             Number(d["OthNHE"].replace(/,/g, "")) +
             Number(d["NHPINHE"].replace(/,/g, ""));
-          d.twoplus = Number(d["Rc2plNHE"].replace(/,/g, ""));
+          d["multi-racial"] = Number(d["Rc2plNHE"].replace(/,/g, ""));
           d.boro_cd = getCDNum(d["GeogName"], d["Borough"]); //PUMAtoBoroCD[d['GeogName'].replace(/; New York/, "").replace(/, New York/, "")]
         });
 
@@ -317,7 +317,7 @@
           "white",
           "hispanic",
           "other",
-          "twoplus",
+          "multi-racial",
           null,
         ];
 
