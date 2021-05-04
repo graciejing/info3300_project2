@@ -316,7 +316,6 @@
           "black",
           "white",
           "hispanic",
-          // "hawaiianpi",
           "other",
           "twoplus",
           null,
@@ -329,7 +328,7 @@
         let controlScale = d3
         .scaleOrdinal()
         .domain(races)
-        .range(["#D5D5D6", "#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD","#8C564B", ])
+        .range(["#D5D5D6", "#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD","#8C564B" ])
         var demoProjection = d3
           .geoMercator()
           .fitSize([mapWidth, mapHeight], communities);
